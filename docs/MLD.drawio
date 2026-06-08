@@ -1,0 +1,115 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+  <diagram name="MLD MongoDB" id="mld-mongodb-manager-hub">
+    <mxGraphModel dx="872" dy="563" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="leg-box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#888888;" value="" vertex="1">
+          <mxGeometry height="95" width="260" x="1300" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg-title" parent="1" style="text;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#000000;" value="Légende" vertex="1">
+          <mxGeometry height="20" width="100" x="1310" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="leg-ref" parent="1" style="text;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#000000;" value="━━━━▶  Référence (ObjectId)" vertex="1">
+          <mxGeometry height="20" width="220" x="1310" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="leg-embed" parent="1" style="text;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#000000;" value="╌╌╌╌▶  Embedding (imbriqué)" vertex="1">
+          <mxGeometry height="20" width="220" x="1310" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="leg-ia" parent="1" style="text;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#6c3483;" value="███  Collection IA" vertex="1">
+          <mxGeometry height="20" width="160" x="1310" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="col-util-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="utilisateurs" vertex="1">
+          <mxGeometry height="30" width="220" x="30" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="col-util-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;nom : String&lt;br&gt;prenom : String&lt;br&gt;email : String (unique)&lt;br&gt;mot_de_passe_hash : String&lt;br&gt;role : String&lt;br&gt;createdAt : Date&lt;/font&gt;" vertex="1">
+          <mxGeometry height="130" width="220" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="col-marque-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="marques" vertex="1">
+          <mxGeometry height="30" width="220" x="330" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="col-marque-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;nom : String&lt;br&gt;logo : String&lt;br&gt;description : String&lt;br&gt;actif : Boolean&lt;br&gt;createdAt : Date&lt;/font&gt;" vertex="1">
+          <mxGeometry height="115" width="220" x="330" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="col-tour-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="tournages" vertex="1">
+          <mxGeometry height="30" width="300" x="630" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="LLOZ89uL4TISxPAh5Qpt-8" edge="1" parent="1" source="col-tour-body" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#000000;endArrow=open;endFill=0;" target="col-interv-body">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="col-tour-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;titre : String&lt;br&gt;date_tournage : Date&lt;br&gt;lieu : String&lt;br&gt;statut : String&lt;br&gt;description : String&lt;br&gt;marque_id : ObjectId (ref → marques)&lt;br&gt;intervenants : [ObjectId] (ref → intervenants)&lt;br&gt;createdAt : Date&lt;br&gt;updatedAt : Date&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="300" x="630" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="embed-cren-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffd966;strokeColor=#b8860b;fontStyle=1;fontSize=12;fontColor=#000000;" value="  ↳ creneaux [ ]  (embedded)" vertex="1">
+          <mxGeometry height="24" width="300" x="630" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="embed-cren-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff9e6;strokeColor=#b8860b;align=left;spacingLeft=20;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId&lt;br&gt;date_debut : Date&lt;br&gt;date_fin : Date&lt;br&gt;salle : String&lt;br&gt;equipements : String&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="630" y="274" as="geometry" />
+        </mxCell>
+        <mxCell id="col-interv-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="intervenants" vertex="1">
+          <mxGeometry height="30" width="220" x="1010" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="col-interv-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;nom : String&lt;br&gt;prenom : String&lt;br&gt;email : String&lt;br&gt;telephone : String&lt;br&gt;specialite : String&lt;br&gt;actif : Boolean&lt;/font&gt;" vertex="1">
+          <mxGeometry height="130" width="220" x="1010" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="col-camp-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="campagnes" vertex="1">
+          <mxGeometry height="30" width="240" x="30" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="col-camp-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;marque_id : ObjectId (ref → marques)&lt;br&gt;nom : String&lt;br&gt;budget : Number&lt;br&gt;date_debut : Date&lt;br&gt;date_fin : Date&lt;br&gt;objectif_leads : Number&lt;br&gt;leads_actuels : Number&lt;br&gt;statut : String&lt;/font&gt;" vertex="1">
+          <mxGeometry height="170" width="240" x="30" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="LLOZ89uL4TISxPAh5Qpt-3" edge="1" parent="1" source="col-cont-hdr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.295;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;strokeColor=#000000;endArrow=open;endFill=0;exitPerimeter=0;" target="col-util-body">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LLOZ89uL4TISxPAh5Qpt-10" edge="1" parent="1" source="col-cont-hdr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#000000;endArrow=open;endFill=0;" target="col-tour-body">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="col-cont-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#007FFF;strokeColor=#000000;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="contenus" vertex="1">
+          <mxGeometry height="30" width="275" x="458" y="438" as="geometry" />
+        </mxCell>
+        <mxCell id="col-cont-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;tournage_id : ObjectId (ref → tournages)&lt;br&gt;responsable_id : ObjectId (ref → utilisateurs)&lt;br&gt;titre : String&lt;br&gt;type_contenu : String&lt;br&gt;statut_workflow : String&lt;br&gt;pilier : String&lt;br&gt;description : String&lt;br&gt;script_ia : String&lt;br&gt;caption_ia : String&lt;br&gt;date_creation : Date&lt;br&gt;date_publication : Date&lt;/font&gt;" vertex="1">
+          <mxGeometry height="230" width="275" x="458" y="468" as="geometry" />
+        </mxCell>
+        <mxCell id="col-ia-hdr" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#9b59b6;strokeColor=#6c3483;fontStyle=1;fontSize=13;fontColor=#ffffff;" value="generations_ia" vertex="1">
+          <mxGeometry height="30" width="260" x="800" y="443" as="geometry" />
+        </mxCell>
+        <mxCell id="col-ia-body" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5e6ff;strokeColor=#6c3483;align=left;spacingLeft=8;fontSize=12;verticalAlign=top;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;_id : ObjectId (PK)&lt;br&gt;utilisateur_id : ObjectId (ref → utilisateurs)&lt;br&gt;marque_id : ObjectId (ref → marques)&lt;br&gt;pilier : String&lt;br&gt;type_contenu : String&lt;br&gt;contexte : String&lt;br&gt;resultat : String&lt;br&gt;date_generation : Date&lt;/font&gt;" vertex="1">
+          <mxGeometry height="155" width="260" x="800" y="473" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="col-tour-hdr" style="endArrow=open;endFill=0;endSize=10;html=1;rounded=0;strokeColor=#000000;strokeWidth=2;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="col-marque-hdr" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r1" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#000000;fontStyle=1;" value="marque_id" vertex="1">
+          <mxGeometry height="16" width="70" x="552" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r2" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#000000;fontStyle=1;" value="intervenants[ ]" vertex="1">
+          <mxGeometry height="16" width="95" x="921" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r3" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#000000;fontStyle=1;labelBackgroundColor=none;" value="marque_id" vertex="1">
+          <mxGeometry height="16" width="70" x="355" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r4" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#000000;fontStyle=1;" value="tournage_id" vertex="1">
+          <mxGeometry height="16" width="80" x="595" y="382" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r5" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#000000;fontStyle=1;" value="responsable_id" vertex="1">
+          <mxGeometry height="16" width="100" x="330" y="316" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" edge="1" parent="1" source="col-ia-hdr" style="endArrow=open;endFill=0;endSize=10;html=1;rounded=0;strokeColor=#6c3483;strokeWidth=2;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" target="col-util-body" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r6" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#6c3483;fontStyle=1;" value="utilisateur_id" vertex="1">
+          <mxGeometry height="16" width="95" x="480" y="234" as="geometry" />
+        </mxCell>
+        <mxCell id="r7" edge="1" parent="1" source="col-ia-hdr" style="endArrow=open;endFill=0;endSize=10;html=1;rounded=0;strokeColor=#6c3483;strokeWidth=2;dashed=1;exitX=0.2;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="col-marque-body" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-r7" parent="1" style="text;strokeColor=none;fillColor=none;align=center;fontSize=10;fontColor=#6c3483;fontStyle=1;" value="marque_id" vertex="1">
+          <mxGeometry height="16" width="70" x="832" y="392" as="geometry" />
+        </mxCell>
+        <mxCell id="LLOZ89uL4TISxPAh5Qpt-1" edge="1" parent="1" source="col-camp-hdr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.455;entryY=1.009;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#000000;endArrow=open;endFill=0;" target="col-marque-body">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
