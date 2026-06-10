@@ -8,6 +8,7 @@ const contenuRoutes = require('./routes/contenus');
 const campagneRoutes = require('./routes/campagnes');
 const marqueRoutes = require('./routes/marques');
 const intervenantRoutes = require('./routes/intervenants');
+const iaRoutes = require('./routes/ia');
 require('dotenv').config();
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/contenus', contenuRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/marques', marqueRoutes);
 app.use('/api/intervenants', intervenantRoutes);
+app.use('/api/ia', iaRoutes);
 // ===== DÉMARRAGE =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
