@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, MapPin, User, GraduationCap, X, Trash2, Edit2 } from 'lucide-react';
+import { Plus, MapPin, User, GraduationCap, X, Trash2, Search } from 'lucide-react';
 
 const Marques = () => {
     const [marques, setMarques] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
+    const [recherche, setRecherche] = useState('');
+    const [filtreCampus, setFiltreCampus] = useState('Tous');
+
     // États pour gérer la modale (Création vs Édition)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -36,6 +39,16 @@ const Marques = () => {
     useEffect(() => {
         fetchMarques();
     }, []);
+
+    // Liste des campus disponibles, calculée a partir des marques existantes
+    const campusDisponibles = ['Tous', ...new Set(marques.map(m => m.campus).filter(Boolean))];
+
+    // Marques filtrées selon la recherche et le campus selectionne
+    const marquesFiltrees = marques.filter((m) => {
+        const correspondNom = m.nom.toLowerCase().includes(recherche.toLowerCase());
+        const correspondCampus = filtreCampus === 'Tous' || m.campus === filtreCampus;
+        return correspondNom && correspondCampus;
+    });
 
     // Ouvrir la modale en mode création
     const handleOpenCreateModal = () => {
@@ -73,7 +86,7 @@ const Marques = () => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette marque ?")) {
             try {
                 await api.delete(`/marques/${id}`);
-                fetchMarques(); 
+                fetchMarques();
             } catch (err) {
                 console.error("Erreur lors de la suppression :", err);
                 alert("Impossible de supprimer la marque.");
@@ -91,7 +104,7 @@ const Marques = () => {
                 // Mode Création : Requête POST
                 await api.post('/marques', formData);
             }
-            
+
             setIsModalOpen(false);
             fetchMarques();
         } catch (err) {
@@ -105,12 +118,12 @@ const Marques = () => {
     return (
         <div className="p-8 bg-gray-50 min-h-screen flex-1">
             {/* EN-TÊTE */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-[#111827]">Marques</h1>
-                    <p className="text-sm text-gray-500 mt-1">{marques.length} écoles / marques</p>
+                    <p className="text-sm text-gray-500 mt-1">{marquesFiltrees.length} sur {marques.length} écoles / marques</p>
                 </div>
-                <button 
+                <button
                     onClick={handleOpenCreateModal}
                     className="bg-[#3b82f6] hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm"
                 >
@@ -119,33 +132,57 @@ const Marques = () => {
                 </button>
             </div>
 
+            {/* BARRE DE RECHERCHE ET FILTRE */}
+            <div className="flex gap-3 mb-8">
+                <div className="relative flex-1 max-w-sm">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Rechercher une marque..."
+                        value={recherche}
+                        onChange={(e) => setRecherche(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                </div>
+
+                <select
+                    value={filtreCampus}
+                    onChange={(e) => setFiltreCampus(e.target.value)}
+                    className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
+                >
+                    {campusDisponibles.map((campus) => (
+                        <option key={campus} value={campus}>{campus}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* GRILLE : Design en Rectangles minces et horizontaux */}
-            {marques.length === 0 ? (
+            {marquesFiltrees.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                    <p className="text-gray-500 font-medium">Aucune marque pour le moment.</p>
+                    <p className="text-gray-500 font-medium">Aucune marque ne correspond à votre recherche.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {marques.map((m) => (
-                        <div 
-                            key={m._id} 
+                    {marquesFiltrees.map((m) => (
+                        <div
+                            key={m._id}
                             onClick={(e) => handleOpenEditModal(m, e)}
-                            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer flex items-center justify-between relative group animate-in fade-in duration-200"
+                            className="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer flex items-center justify-between relative group animate-in fade-in duration-200"
                         >
                             {/* Partie gauche : Icône + Infos empilées horizontalement */}
                             <div className="flex items-center gap-4 truncate mr-12">
-                                <div 
+                                <div
                                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                                     style={{ backgroundColor: `${m.couleur || '#4f46e5'}15`, color: m.couleur || '#4f46e5' }}
                                 >
                                     <GraduationCap size={20} />
                                 </div>
-                                
+
                                 <div className="truncate">
                                     <h3 className="font-bold text-gray-900 text-sm tracking-tight truncate" title={m.nom}>
                                         {m.nom}
                                     </h3>
-                                    
+
                                     <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 font-medium">
                                         <span className="flex items-center gap-1">
                                             <MapPin size={12} className="text-gray-400" />
@@ -179,12 +216,12 @@ const Marques = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-gray-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
-                        
+
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h2 className="text-lg font-bold text-gray-900">
                                 {isEditing ? 'Modifier la marque' : 'Nouvelle marque'}
                             </h2>
-                            <button 
+                            <button
                                 onClick={() => setIsModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
                             >
@@ -198,12 +235,12 @@ const Marques = () => {
                                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                                     Nom de l'école
                                 </label>
-                                <input 
+                                <input
                                     type="text"
                                     required
                                     placeholder="Ex: ESIIA Paris"
                                     value={formData.nom}
-                                    onChange={(e) => setFormData({...formData, nom: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                                 />
                             </div>
@@ -213,15 +250,16 @@ const Marques = () => {
                                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                                     Campus
                                 </label>
-                                <select 
+                                <select
                                     value={formData.campus}
-                                    onChange={(e) => setFormData({...formData, campus: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                                 >
                                     <option value="Torcy">Torcy</option>
                                     <option value="Noisiel">Noisiel</option>
                                     <option value="Lyon">Lyon</option>
                                     <option value="Évry">Évry</option>
+                                    <option value="International">International</option>
                                 </select>
                             </div>
 
@@ -230,9 +268,9 @@ const Marques = () => {
                                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                                     Géré par
                                 </label>
-                                <select 
+                                <select
                                     value={formData.gere_par}
-                                    onChange={(e) => setFormData({...formData, gere_par: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, gere_par: e.target.value })}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                                 >
                                     <option value="Community Manager">Community Manager</option>
@@ -245,11 +283,11 @@ const Marques = () => {
                                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                                     CM assigné (Optionnel)
                                 </label>
-                                <input 
+                                <input
                                     type="text"
                                     placeholder="Nom du CM"
                                     value={formData.cm_assigne}
-                                    onChange={(e) => setFormData({...formData, cm_assigne: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, cm_assigne: e.target.value })}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                                 />
                             </div>
@@ -264,7 +302,7 @@ const Marques = () => {
                                         <button
                                             key={color}
                                             type="button"
-                                            onClick={() => setFormData({...formData, couleur: color})}
+                                            onClick={() => setFormData({ ...formData, couleur: color })}
                                             className={`w-7 h-7 rounded-full transition-transform ${formData.couleur === color ? 'scale-110 ring-2 ring-offset-2 ring-blue-500' : 'opacity-80 hover:opacity-100'}`}
                                             style={{ backgroundColor: color }}
                                         />
@@ -273,14 +311,14 @@ const Marques = () => {
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
                                     className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     Annuler
                                 </button>
-                                <button 
+                                <button
                                     type="submit"
                                     className="px-5 py-2 text-sm font-semibold text-white bg-[#3b82f6] hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
                                 >

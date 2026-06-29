@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Calendar,       
-  Workflow, 
-  Megaphone, 
-  Clapperboard, 
-  CalendarClock,  
-  Award, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Workflow,
+  Megaphone,
+  Clapperboard,
+  CalendarClock,
+  Award,
   Users,          // Pour Équipe
-  UserCheck,      
-  Layers3,        
-  BarChart3,      
-  BotMessageSquare, 
+  UserCheck,
+  Layers3,
+  BarChart3,
+  BotMessageSquare,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -26,20 +26,20 @@ const Sidebar = () => {
     const liens = [
         // --- CATEGORIE : GENERAL ---
         { path: '/dashboard', label: 'Tableau de bord', categorie: 'GENERAL', icon: LayoutDashboard },
-        { path: '/planning', label: 'Planning', categorie: 'GENERAL', icon: Calendar }, 
-        { path: '/workflow', label: 'Workflow', categorie: 'GENERAL', icon: Workflow }, 
+        { path: '/planning', label: 'Planning', categorie: 'GENERAL', icon: Calendar },
+        { path: '/workflow', label: 'Workflow', categorie: 'GENERAL', icon: Workflow },
         { path: '/campagnes', label: 'Campagnes', categorie: 'GENERAL', icon: Megaphone },
-        
-        // --- CATEGORIE : TOURNAGES (Modifié ici) ---
-        { path: '/tournages', label: 'Tournages', categorie: 'TOURNAGES', icon: Clapperboard }, 
-        { path: '/calendrier-creneaux', label: 'Calendrier créneaux', categorie: 'TOURNAGES', icon: CalendarClock }, 
-        
+
+        // --- CATEGORIE : TOURNAGES ---
+        { path: '/tournages', label: 'Tournages', categorie: 'TOURNAGES', icon: Clapperboard },
+        { path: '/calendrier-creneaux', label: 'Calendrier créneaux', categorie: 'TOURNAGES', icon: CalendarClock },
+
         // --- CATEGORIE : ADMINISTRATEUR ---
         { path: '/marques', label: 'Marques', categorie: 'ADMINISTRATEUR', icon: Award },
-        { path: '/equipe', label: 'Équipe', categorie: 'ADMINISTRATEUR', icon: Users }, // Ajouté juste après Marques !
-        { path: '/intervenants', label: 'Intervenants', categorie: 'ADMINISTRATEUR', icon: UserCheck }, 
-        { path: '/templates', label: 'Templates', categorie: 'ADMINISTRATEUR', icon: Layers3 }, 
-        { path: '/reporting', label: 'Reporting', categorie: 'ADMINISTRATEUR', icon: BarChart3 }, 
+        { path: '/equipe', label: 'Équipe', categorie: 'ADMINISTRATEUR', icon: Users },
+        { path: '/intervenants', label: 'Intervenants', categorie: 'ADMINISTRATEUR', icon: UserCheck },
+        { path: '/templates', label: 'Templates', categorie: 'ADMINISTRATEUR', icon: Layers3 },
+        { path: '/reporting', label: 'Reporting', categorie: 'ADMINISTRATEUR', icon: BarChart3 },
         { path: '/generateur-ia', label: 'Générateur IA', categorie: 'ADMINISTRATEUR', icon: BotMessageSquare },
     ];
 
@@ -132,7 +132,7 @@ const Sidebar = () => {
                             </div>
                         )}
                     </div>
-                    
+
                     <div className="px-4 pb-4">
                         <button
                             onClick={logout}

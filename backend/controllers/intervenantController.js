@@ -2,7 +2,7 @@ const Intervenant = require('../models/Intervenant');
 
 const getIntervenants = async (req, res) => {
     try {
-        const intervenants = await Intervenant.find();
+        const intervenants = await Intervenant.find().populate('marque_id', 'nom');
         res.status(200).json(intervenants);
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur.', error: error.message });
@@ -13,7 +13,8 @@ const createIntervenant = async (req, res) => {
     try {
         const intervenant = new Intervenant(req.body);
         await intervenant.save();
-        res.status(201).json(intervenant);
+        const intervenantPopule = await Intervenant.findById(intervenant._id).populate('marque_id', 'nom');
+        res.status(201).json(intervenantPopule);
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur.', error: error.message });
     }
@@ -25,7 +26,7 @@ const updateIntervenant = async (req, res) => {
             req.params.id,
             req.body,
             { new: true }
-        );
+        ).populate('marque_id', 'nom');
         if (!intervenant) {
             return res.status(404).json({ message: 'Intervenant non trouve.' });
         }
