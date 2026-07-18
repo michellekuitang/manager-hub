@@ -13,11 +13,12 @@ const marqueRoutes = require('./routes/marques');
 const intervenantRoutes = require('./routes/intervenants');
 const iaRoutes = require('./routes/ia');
 const equipeRoutes = require('./routes/equipe');
+const templateRoutes = require('./routes/templates');
+const creneauRoutes = require('./routes/creneaux'); // ✨ AJOUT : Import de la route des créneaux
 
 const app = express();
 
 // ===== MIDDLEWARES GLOBAUX =====
-// (Toujours déclarer CORS et JSON en tout premier)
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
@@ -35,7 +36,9 @@ app.use('/api/campagnes', campagneRoutes);
 app.use('/api/marques', marqueRoutes);
 app.use('/api/intervenants', intervenantRoutes); 
 app.use('/api/ia', iaRoutes);
-app.use('/api/equipe', equipeRoutes); // <--- Ta route d'équipe est maintenant parfaitement enregistrée après le parseur JSON
+app.use('/api/equipe', equipeRoutes); 
+app.use('/api/templates', templateRoutes);
+app.use('/api/creneaux', creneauRoutes); // ✨ AJOUT : Activation de l'endpoint pour le Frontend
 
 // ===== DÉMARRAGE =====
 const PORT = process.env.PORT || 5000;

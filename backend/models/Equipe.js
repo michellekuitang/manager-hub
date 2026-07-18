@@ -18,17 +18,25 @@ const equipeSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    telephone: {
+        type: String,
+        trim: true
+    },
     role: {
         type: String,
-        enum: ['Administrateur', 'Community Manager', 'Modérateur'],
-        default: 'Community Manager'
+        default: 'Photographe',
+        trim: true // Plus de "enum", c'est devenu un texte libre !
+    },
+    marque: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Marque' // Permet de lier le membre à une école existante
     },
     actif: {
         type: Boolean,
         default: true
     }
 }, {
-    timestamps: true // Crée automatiquement createdAt et updatedAt
+    timestamps: true
 });
 
 module.exports = mongoose.model('Equipe', equipeSchema);

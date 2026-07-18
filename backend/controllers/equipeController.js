@@ -3,7 +3,8 @@ const Equipe = require('../models/Equipe');
 // 1. Récupérer tous les membres de l'équipe
 exports.getMembres = async (req, res) => {
     try {
-        const membres = await Equipe.find().sort({ createdAt: -1 });
+        // On peuple la marque pour récupérer son nom dans le frontend
+        const membres = await Equipe.find().populate('marque', 'nom').sort({ createdAt: -1 });
         res.status(200).json(membres);
     } catch (err) {
         res.status(500).json({ message: "Erreur lors de la récupération des membres", error: err.message });
@@ -13,15 +14,15 @@ exports.getMembres = async (req, res) => {
 // 2. Ajouter un nouveau membre
 exports.createMembre = async (req, res) => {
     try {
-        const { nom, prenom, email, role, actif } = req.body;
+        // Ajout de telephone et marque
+        const { nom, prenom, email, telephone, role, marque, actif } = req.body;
 
-        // Vérifier si l'email existe déjà
         const emailExiste = await Equipe.findOne({ email });
         if (emailExiste) {
             return res.status(400).json({ message: "Un membre avec cet email existe déjà." });
         }
 
-        const nouveauMembre = new Equipe({ nom, prenom, email, role, actif });
+        const nouveauMembre = new Equipe({ nom, prenom, email, telephone, role, marque, actif });
         await nouveauMembre.save();
         
         res.status(201).json(nouveauMembre);
@@ -34,11 +35,12 @@ exports.createMembre = async (req, res) => {
 exports.updateMembre = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nom, prenom, email, role, actif } = req.body;
+        // Ajout de telephone et marque
+        const { nom, prenom, email, telephone, role, marque, actif } = req.body;
 
         const membreModifie = await Equipe.findByIdAndUpdate(
             id,
-            { nom, prenom, email, role, actif },
+            { nom, prenom, email, telephone, role, marque, actif },
             { new: true, runValidators: true }
         );
 

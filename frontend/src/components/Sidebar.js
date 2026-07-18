@@ -26,7 +26,7 @@ const Sidebar = () => {
     const liens = [
         // --- CATEGORIE : GENERAL ---
         { path: '/dashboard', label: 'Tableau de bord', categorie: 'GENERAL', icon: LayoutDashboard },
-        { path: '/planning', label: 'Planning', categorie: 'GENERAL', icon: Calendar },
+        // { path: '/planning', label: 'Planning', categorie: 'GENERAL', icon: Calendar },
         { path: '/workflow', label: 'Workflow', categorie: 'GENERAL', icon: Workflow },
         { path: '/campagnes', label: 'Campagnes', categorie: 'GENERAL', icon: Megaphone },
 

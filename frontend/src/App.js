@@ -11,6 +11,8 @@ import Intervenants from './pages/Intervenants';
 import GenerateurIA from './pages/GenerateurIA';
 import NotFound from './pages/NotFound';
 import Equipes from './pages/Equipes';
+import Templates from './pages/Templates';
+import Creneaux from './pages/Creneaux';
 
 const PrivateRoute = ({ children }) => {
     const { token, loading } = useAuth();
@@ -61,10 +63,22 @@ const App = () => {
                         </PrivateRoute>
                     } />
 
-                    {/* NOUVELLE ROUTE AJOUTÉE POUR L'ÉQUIPE */}
+                    <Route path="/templates" element={
+                        <PrivateRoute>
+                            <Layout><Templates /></Layout>
+                        </PrivateRoute>
+                    } />
+
                     <Route path="/equipe" element={
                         <PrivateRoute>
                             <Layout><Equipes /></Layout>
+                        </PrivateRoute>
+                    } />
+                    
+                    {/* 🚀 NOUVELLE ROUTE AJOUTÉE POUR LA GESTION DES CRÉNEAUX */}
+                    <Route path="/calendrier-creneaux" element={
+                        <PrivateRoute>
+                            <Layout><Creneaux /></Layout>
                         </PrivateRoute>
                     } />
                     
