@@ -2,8 +2,28 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { 
     Calendar, Plus, X, ChevronLeft, ChevronRight, 
-    CheckCircle2, Clock, Video, ArrowRight, Trash2 
+    CheckCircle2, Clock, Video, Trash2 
 } from 'lucide-react';
+
+// Helper de normalisation universel pour régler le problème d'accents et de casse
+const normalizeStatut = (statutRaw) => {
+    if (!statutRaw) return 'A faire';
+    const s = String(statutRaw).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (s.includes('faire')) return 'A faire';
+    if (s.includes('cours')) return 'En cours';
+    if (s.includes('valider')) return 'A valider';
+    if (s.includes('valide')) return 'Valide';
+    if (s.includes('publi')) return 'Publie';
+    return 'A faire'; // Sécurité : fallback sur "A faire" et NON "Publié"
+};
+
+const STATUTS_CONFIG = {
+    'A faire': { label: 'À faire', style: 'bg-slate-50 text-slate-600 border-slate-200' },
+    'En cours': { label: 'En cours', style: 'bg-[#eff6ff] text-blue-600 border-blue-200' },
+    'A valider': { label: 'À valider', style: 'bg-[#fffbeb] text-amber-600 border-amber-200' },
+    'Valide': { label: 'Validé', style: 'bg-teal-50 text-teal-600 border-teal-200' },
+    'Publie': { label: 'Publié', style: 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' }
+};
 
 const Tournages = () => {
     const [tournages, setTournages] = useState([]);
@@ -32,6 +52,7 @@ const Tournages = () => {
 
     const [isBookingOpen, setIsBookingOpen] = useState(false);
     const [bookingStep, setBookingStep] = useState(1);
+    const [bookingError, setBookingError] = useState('');
     const [selectedDay, setSelectedDay] = useState('JEU. 16');
     const [selectedTime, setSelectedTime] = useState('');
     const [bookingForm, setBookingForm] = useState({
@@ -117,7 +138,7 @@ const Tournages = () => {
             marque_id: t.marque_id && typeof t.marque_id === 'object' ? t.marque_id._id : (t.marque_id || ''),
             intervenant_id: t.intervenant_id && typeof t.intervenant_id === 'object' ? t.intervenant_id._id : (t.intervenant_id || ''),
             creneau_id: targetCreneauId || '',
-            statut: t.statut || 'A faire',
+            statut: normalizeStatut(t.statut),
             type_contenu: t.type_contenu || 'presentation',
             plateforme: t.plateforme || 'Instagram',
             priorite: t.priorite || 'Moyenne',
@@ -126,20 +147,6 @@ const Tournages = () => {
             notes_internes: t.notes_internes || ''
         });
         setIsModalOpen(true);
-    };
-
-    const handleAvancerStatut = async (id, currentStatut) => {
-        const etapes = ['A faire', 'En cours', 'A valider', 'Valide', 'Publie'];
-        const currentIndex = etapes.indexOf(currentStatut);
-        if (currentIndex !== -1 && currentIndex < etapes.length - 1) {
-            const nextStatut = etapes[currentIndex + 1];
-            try {
-                await api.put(`/tournages/${id}`, { statut: nextStatut });
-                fetchData();
-            } catch (err) {
-                console.error("Erreur lors de l'avancement du statut", err);
-            }
-        }
     };
 
     const handleDeleteTournage = async () => {
@@ -171,10 +178,14 @@ const Tournages = () => {
         e.preventDefault();
         setErrorMessage('');
 
-        const selectedSlot = form.creneau_id || null;
-        const payload = { ...form, creneau_id: selectedSlot };
-
-        if (payload.intervenant_id === '') payload.intervenant_id = null;
+        const payload = { 
+            ...form, 
+            statut: normalizeStatut(form.statut),
+            marque_id: form.marque_id || null,
+            intervenant_id: form.intervenant_id || null,
+            creneau_id: form.creneau_id || null,
+            date_publication_prevue: form.date_publication_prevue || null
+        };
 
         try {
             if (editingId) {
@@ -192,10 +203,13 @@ const Tournages = () => {
     };
 
     const handleConfirmBooking = async () => {
+        setBookingError('');
         try {
-            const dayNum = selectedDay.split(' ')[1];
-            const [hours, minutes] = selectedTime.split(':');
-            const dateDebut = new Date(2026, 6, parseInt(dayNum), parseInt(hours), parseInt(minutes));
+            const dayNum = parseInt(selectedDay.split(' ')[1], 10);
+            const [hours, minutes] = selectedTime.split(':').map(Number);
+            
+            const now = new Date();
+            const dateDebut = new Date(now.getFullYear(), now.getMonth(), dayNum, hours, minutes);
             const dateFin = new Date(dateDebut.getTime() + 30 * 60000);
 
             const res = await api.post('/creneaux', {
@@ -214,6 +228,7 @@ const Tournages = () => {
             fetchData();
         } catch (err) {
             console.error('Erreur lors de la réservation', err);
+            setBookingError(err.response?.data?.message || "Impossible de créer la réservation.");
         }
     };
 
@@ -261,6 +276,7 @@ const Tournages = () => {
     const resetBookingForm = () => {
         setIsBookingOpen(false);
         setBookingStep(1);
+        setBookingError('');
         setSelectedTime('');
         setBookingForm({ intervenant_id: '', objet: '' });
     };
@@ -317,13 +333,12 @@ const Tournages = () => {
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Publication</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Statut</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Priorité</th>
-                                <th className="px-6 py-3.5 text-sm font-normal text-slate-400 w-24"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
                             {tournages.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="px-6 py-12 text-center">
+                                    <td colSpan="7" className="px-6 py-12 text-center">
                                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-2">
                                             <div className="p-2.5 bg-slate-50 text-slate-400 rounded-xl"><Video size={20} /></div>
                                             <p className="text-sm font-medium text-slate-700">Aucun tournage pour le moment</p>
@@ -332,6 +347,9 @@ const Tournages = () => {
                                 </tr>
                             ) : (
                                 tournages.map(t => {
+                                    const canonicalStatut = normalizeStatut(t.statut);
+                                    const statutInfo = STATUTS_CONFIG[canonicalStatut] || STATUTS_CONFIG['A faire'];
+
                                     return (
                                         <tr
                                             key={t._id}
@@ -341,7 +359,7 @@ const Tournages = () => {
                                             <td className="px-6 py-4 text-sm font-semibold text-slate-900">{t.titre}</td>
                                             <td className="px-6 py-4 text-sm text-slate-400 uppercase tracking-wide">{t.marque_id?.nom || '—'}</td>
                                             <td className="px-6 py-4 text-sm text-slate-700 font-medium uppercase tracking-wide">
-                                                {t.intervenant_id ? `${t.intervenant_id.nom} ${t.intervenant_id.prenom}` : '—'}
+                                                {t.intervenant_id?.nom ? `${t.intervenant_id.nom} ${t.intervenant_id.prenom}` : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-slate-600">
                                                 {t.type_contenu === 'presentation' ? 'Présentation / Démo'
@@ -353,25 +371,15 @@ const Tournages = () => {
                                             <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                                                 {t.date_publication_prevue ? (
                                                     <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
-                                                        {new Date(t.date_publication_prevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        {new Date(`${t.date_publication_prevue.split('T')[0]}T00:00:00`).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                     </span>
                                                 ) : (
                                                     <span className="text-slate-300 text-xs">Non définie</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm">
-                                                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium border ${
-                                                    t.statut === 'Publie' ? 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' :
-                                                    t.statut === 'Valide' ? 'bg-teal-50 text-teal-600 border-teal-200' :
-                                                    t.statut === 'A valider' ? 'bg-[#fffbeb] text-amber-600 border-amber-200' :
-                                                    t.statut === 'En cours' ? 'bg-[#eff6ff] text-blue-600 border-blue-200' :
-                                                    'bg-slate-50 text-slate-600 border-slate-200'
-                                                }`}>
-                                                    {t.statut === 'A faire' ? 'À faire'
-                                                        : t.statut === 'En cours' ? 'En cours'
-                                                        : t.statut === 'A valider' ? 'À valider'
-                                                        : t.statut === 'Valide' ? 'Validé'
-                                                        : 'Publié'}
+                                                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium border ${statutInfo.style}`}>
+                                                    {statutInfo.label}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm">
@@ -382,17 +390,6 @@ const Tournages = () => {
                                                 }`}>
                                                     {t.priorite || 'Moyenne'}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-right">
-                                                {t.statut !== 'Publie' && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleAvancerStatut(t._id, t.statut); }}
-                                                        className="inline-flex items-center gap-1 text-slate-900 font-medium hover:text-slate-600 transition-colors"
-                                                    >
-                                                        <span>Avancer</span>
-                                                        <ArrowRight size={14} className="mt-0.5" />
-                                                    </button>
-                                                )}
                                             </td>
                                         </tr>
                                     );
@@ -564,6 +561,12 @@ const Tournages = () => {
                             <button onClick={resetBookingForm} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"><X size={18} /></button>
                         </div>
 
+                        {bookingError && (
+                            <div className="m-5 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium">
+                                Erreur : {bookingError}
+                            </div>
+                        )}
+
                         {bookingStep === 1 && (
                             <div className="p-5 space-y-4 text-left">
                                 <div>
@@ -576,7 +579,7 @@ const Tournages = () => {
 
                                 <div className="flex justify-between items-center bg-slate-50 py-1.5 px-3 rounded-lg border border-slate-100">
                                     <button type="button" className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronLeft size={14} /></button>
-                                    <span className="text-xs font-bold text-slate-600">13 juil. — 17 juil. 2026</span>
+                                    <span className="text-xs font-bold text-slate-600">Semaine en cours</span>
                                     <button type="button" className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronRight size={14} /></button>
                                 </div>
 
@@ -626,12 +629,12 @@ const Tournages = () => {
                                     <p className="text-xs font-bold text-slate-800 uppercase tracking-wide">
                                         {selectedIntervenantData ? `${selectedIntervenantData.nom} ${selectedIntervenantData.prenom}` : 'Intervenant sélectionné'}
                                     </p>
-                                    <p className="text-xs text-slate-500 font-medium mt-0.5">{selectedDay} 2026 · {selectedTime} — {getEndTime(selectedTime)}</p>
+                                    <p className="text-xs text-slate-500 font-medium mt-0.5">{selectedDay} · {selectedTime} — {getEndTime(selectedTime)}</p>
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Objet du tournage (optionnel)</label>
-                                    <input type="text" name="objet" value={bookingForm.objet} onChange={handleBookingInputChange} placeholder="Ex: Interview étudiant MBA..." className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#3e52b7]" />
+                                    <input type="text" name="objet" value={bookingForm.objet} onChange={handleBookingInputChange} placeholder="Ex: Interview étudiant..." className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#3e52b7]" />
                                 </div>
 
                                 <div className="flex gap-3 pt-2">

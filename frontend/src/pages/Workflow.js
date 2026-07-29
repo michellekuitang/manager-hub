@@ -30,17 +30,16 @@ const MAP_TYPES_TOURNAGE = {
     'other': 'Video'
 };
 
-// Normalisation de secours si un statut sans accent arrive de l'API
-const normaliserStatut = (statut) => {
-    if (!statut) return 'À faire';
-    const map = {
-        'A faire': 'À faire',
-        'En cours': 'En cours',
-        'A valider': 'À valider',
-        'Valide': 'Validé',
-        'Publie': 'Publié'
-    };
-    return map[statut] || statut;
+// Normalisation universelle du statut (insensible aux accents et à la casse)
+const normalizeStatut = (statutRaw) => {
+    if (!statutRaw) return 'À faire';
+    const s = String(statutRaw).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (s.includes('faire')) return 'À faire';
+    if (s.includes('cours')) return 'En cours';
+    if (s.includes('valider')) return 'À valider';
+    if (s.includes('valide')) return 'Validé';
+    if (s.includes('publi')) return 'Publié';
+    return 'À faire';
 };
 
 const Workflow = () => {
@@ -125,12 +124,12 @@ const Workflow = () => {
             date_publication: contenu.date_publication
                 ? new Date(contenu.date_publication).toISOString().split('T')[0]
                 : '',
-            statut_workflow: normaliserStatut(contenu.statut_workflow)
+            statut_workflow: normalizeStatut(contenu.statut_workflow)
         });
         setIsModalOpen(true);
     };
 
-    // Auto-remplissage dynamique avec conversion des types et récupération du statut du tournage
+    // Auto-remplissage dynamique et synchronisation du statut depuis le tournage
     const handleTournageChange = (e) => {
         const selectedTournageId = e.target.value;
 
@@ -142,13 +141,14 @@ const Workflow = () => {
         const tournageObj = tournages.find(t => String(t._id || t.id) === String(selectedTournageId));
 
         if (tournageObj) {
-            // Extraction et formatage de la date de publication
             const datePublicationFormatee = tournageObj.date_publication_prevue
                 ? new Date(tournageObj.date_publication_prevue).toISOString().split('T')[0]
                 : '';
 
             const rawType = (tournageObj.type_contenu || '').toLowerCase();
-            const tournageStatut = normaliserStatut(tournageObj.statut || tournageObj.statut_workflow);
+            
+            // On récupère le statut du tournage et on l'aligne sur le Workflow
+            const statutDuTournage = normalizeStatut(tournageObj.statut || tournageObj.statut_workflow);
 
             setForm(prev => {
                 const typeMappe = MAP_TYPES_TOURNAGE[rawType] || (TYPES.includes(tournageObj.type_contenu) ? tournageObj.type_contenu : prev.type_contenu);
@@ -160,7 +160,7 @@ const Workflow = () => {
                     description: tournageObj.brief || tournageObj.notes_internes || prev.description,
                     date_publication: datePublicationFormatee || prev.date_publication,
                     type_contenu: typeMappe || prev.type_contenu,
-                    statut_workflow: tournageStatut || prev.statut_workflow
+                    statut_workflow: statutDuTournage // Le statut hérite automatiquement du tournage
                 };
             });
         } else {
@@ -174,11 +174,17 @@ const Workflow = () => {
             alert("Veuillez sélectionner un tournage.");
             return;
         }
+
+        const payload = {
+            ...form,
+            statut_workflow: normalizeStatut(form.statut_workflow)
+        };
+
         try {
             if (isEditing) {
-                await api.put(`/contenus/${currentId}`, form);
+                await api.put(`/contenus/${currentId}`, payload);
             } else {
-                await api.post('/contenus', form);
+                await api.post('/contenus', payload);
             }
             setIsModalOpen(false);
             fetchData();
@@ -204,13 +210,12 @@ const Workflow = () => {
 
     const handleAvancer = async (contenu, e) => {
         e.stopPropagation();
-        const statutActuel = normaliserStatut(contenu.statut_workflow);
+        const statutActuel = normalizeStatut(contenu.statut_workflow);
         const currentIndex = STATUTS.indexOf(statutActuel);
         if (currentIndex === -1 || currentIndex === STATUTS.length - 1) return;
 
         const nextStatut = STATUTS[currentIndex + 1];
         try {
-            // Envoi de la double convention de nommage pour garantir la prise en compte backend
             await api.patch(`/contenus/${contenu._id}/statut`, {
                 nouveau_statut: nextStatut,
                 nouveauStatut: nextStatut
@@ -233,12 +238,12 @@ const Workflow = () => {
     });
 
     const getContenusParStatut = (statut) =>
-        contenusFiltres.filter(c => normaliserStatut(c.statut_workflow) === statut);
+        contenusFiltres.filter(c => normalizeStatut(c.statut_workflow) === statut);
 
     if (loading) return <div className="p-6 text-gray-500 text-sm font-medium">Chargement du workflow...</div>;
 
     return (
-        <div className="p-8 bg-gray-50 min-h-screen flex-1">
+        <div className="p-8 bg-gray-50 min-h-screen flex-1 font-sans text-slate-900">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-[#111827]">Workflow</h1>
