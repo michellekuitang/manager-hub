@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const creneauController = require('../controllers/creneauController');
+const auth = require('../middleware/auth');
+const { getCreneaux, createCreneau, updateCreneau, deleteCreneau } = require('../controllers/creneauController');
 
-// Routes de l'API pour les créneaux
-router.get('/', creneauController.getCreneaux);
-router.post('/', creneauController.createCreneau);
-router.delete('/:id', creneauController.deleteCreneau); // 🚀 Nouvelle route de suppression
+router.get('/', auth, getCreneaux);
+router.post('/', auth, createCreneau);
+router.put('/:id', auth, updateCreneau);
+router.delete('/:id', auth, deleteCreneau);
 
 module.exports = router;

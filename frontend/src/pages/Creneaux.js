@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api'; // Corrigé avec ton chemin services/api !
+import { useState, useEffect } from 'react';
+import api from '../services/api';
+import { CalendarClock, Trash2, Link } from 'lucide-react';
 
-const Creneaux = () => {
+const CalendrierCreneaux = () => {
     const [creneaux, setCreneaux] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -13,8 +14,8 @@ const Creneaux = () => {
             setCreneaux(response.data);
             setError('');
         } catch (err) {
-            console.error("Erreur lors de la récupération des créneaux :", err);
-            setError("Impossible de charger les créneaux.");
+            console.error("Erreur lors de la recuperation des creneaux :", err);
+            setError("Impossible de charger les creneaux.");
         } finally {
             setLoading(false);
         }
@@ -24,134 +25,163 @@ const Creneaux = () => {
         fetchCreneaux();
     }, []);
 
-    const handleDeleteCreneau = async (id) => {
-        if (window.confirm("Es-tu sûre de vouloir supprimer ce créneau ? S'il est associé à un tournage, le lien sera rompu.")) {
+    const handleDelete = async (id) => {
+        if (window.confirm("Etes-vous sur de vouloir supprimer ce creneau ? S'il est associe a un tournage, le lien sera rompu.")) {
             try {
                 await api.delete(`/creneaux/${id}`);
                 setCreneaux(prev => prev.filter(c => c._id !== id));
             } catch (err) {
                 console.error("Erreur lors de la suppression :", err);
-                alert(err.response?.data?.message || "Erreur lors de la suppression du créneau.");
+                alert(err.response?.data?.message || "Erreur lors de la suppression du creneau.");
             }
         }
     };
 
-    // Formatage de date ultra-robuste
+    // Correction : on utilise date_debut et date_fin (noms exacts du modele Mongoose)
     const formatDate = (dateString) => {
-        if (!dateString) return "-";
+        if (!dateString) return '—';
         try {
             const date = new Date(dateString);
-            if (isNaN(date.getTime())) return "-";
-            return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+            if (isNaN(date.getTime())) return '—';
+            return date.toLocaleDateString('fr-FR', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
         } catch (e) {
-            return "-";
+            return '—';
         }
     };
 
-    // Détection robuste du statut (gère 'Reserve', 'reserve', 'Réservé', etc.)
+    const formatHeure = (dateString) => {
+        if (!dateString) return '—';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '—';
+            return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return '—';
+        }
+    };
+
     const getStatutBadge = (statut) => {
-        if (!statut) return { text: 'Disponible', badgeClass: 'bg-green-50 text-green-700 border border-green-100', dotClass: 'bg-green-500' };
-        
+        if (!statut) return { text: 'Disponible', classe: 'bg-green-50 text-green-700 border border-green-100', point: 'bg-green-500' };
         const normalized = statut.toLowerCase().trim();
-        const isReserved = normalized.includes('reserve') || normalized.includes('réservé');
-
-        if (isReserved) {
-            return {
-                text: 'Réservé',
-                badgeClass: 'bg-red-50 text-red-700 border border-red-100',
-                dotClass: 'bg-red-500'
-            };
+        if (normalized.includes('reserve') || normalized.includes('réservé')) {
+            return { text: 'Reservé', classe: 'bg-red-50 text-red-700 border border-red-100', point: 'bg-red-500' };
         }
-
-        return {
-            text: 'Disponible',
-            badgeClass: 'bg-green-50 text-green-700 border border-green-100',
-            dotClass: 'bg-green-500'
-        };
+        return { text: 'Disponible', classe: 'bg-green-50 text-green-700 border border-green-100', point: 'bg-green-500' };
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-                <span className="ml-3 text-gray-600 font-medium mt-4">Chargement des créneaux...</span>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            <span className="ml-3 text-gray-500 text-sm font-medium">Chargement des creneaux...</span>
+        </div>
+    );
 
     return (
-        <div className="container mx-auto p-6 max-w-6xl">
+        <div className="p-8 bg-gray-50 min-h-screen flex-1">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800 font-sans">Gestion des Créneaux</h1>
-                    <p className="text-gray-500 text-sm mt-1">Visualisez, contrôlez et nettoyez vos créneaux horaires en toute simplicité.</p>
+                    <h1 className="text-3xl font-bold text-[#111827] flex items-center gap-3">
+                        <CalendarClock size={28} className="text-blue-600" />
+                        Calendrier Creneaux
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {creneaux.length} creneau{creneaux.length > 1 ? 'x' : ''} enregistre{creneaux.length > 1 ? 's' : ''}
+                    </p>
                 </div>
             </div>
 
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-                    <span className="font-semibold mr-2">Erreur :</span> {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm font-medium">
+                    {error}
                 </div>
             )}
 
-            <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-200">
-                <table className="min-w-full leading-normal">
-                    <thead>
-                        <tr className="bg-gray-50 text-gray-500 text-left text-xs uppercase font-semibold tracking-wider">
-                            <th className="px-6 py-4 border-b border-gray-200">Date</th>
-                            <th className="px-6 py-4 border-b border-gray-200">Heure Début</th>
-                            <th className="px-6 py-4 border-b border-gray-200">Heure Fin</th>
-                            <th className="px-6 py-4 border-b border-gray-200">Statut</th>
-                            <th className="px-6 py-4 border-b border-gray-200 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {creneaux.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                {creneaux.length === 0 ? (
+                    <div className="p-12 text-center">
+                        <CalendarClock size={32} className="text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500 font-medium">Aucun creneau enregistre pour le moment.</p>
+                        <p className="text-gray-400 text-sm mt-1">Reservez un creneau depuis la page Tournages.</p>
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <td colSpan="5" className="px-6 py-10 text-center text-gray-500 bg-white">
-                                    <p className="text-base font-medium">Aucun créneau enregistré pour le moment.</p>
-                                </td>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Heure debut</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Heure fin</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Objet</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Intervenant</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tournage lie</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
-                        ) : (
-                            creneaux.map((creneau) => {
-                                const badge = getStatutBadge(creneau.statut);
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {creneaux.map((c) => {
+                                const badge = getStatutBadge(c.statut);
                                 return (
-                                    <tr key={creneau._id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
-                                        <td className="px-6 py-4 text-sm text-gray-800 font-medium">
-                                            {/* Supporte date ou date_creneau */}
-                                            {formatDate(creneau.date || creneau.date_creneau)}
+                                    <tr key={c._id} className="hover:bg-gray-50 transition-colors">
+                                        {/* Correction : on lit date_debut pour la date */}
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                            {formatDate(c.date_debut)}
+                                        </td>
+                                        {/* Correction : on lit date_debut pour l'heure de debut */}
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            {formatHeure(c.date_debut)}
+                                        </td>
+                                        {/* Correction : on lit date_fin pour l'heure de fin */}
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            {formatHeure(c.date_fin)}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            {/* Supporte camelCase et snake_case */}
-                                            {creneau.heureDebut || creneau.heure_debut || '-'}
+                                            {c.objet || '—'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            {/* Supporte camelCase et snake_case */}
-                                            {creneau.heureFin || creneau.heure_fin || '-'}
+                                            {c.intervenant_id
+                                                ? `${c.intervenant_id.prenom || ''} ${c.intervenant_id.nom || ''}`.trim()
+                                                : '—'
+                                            }
                                         </td>
                                         <td className="px-6 py-4 text-sm">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${badge.badgeClass}`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.dotClass}`}></span>
+                                            {c.tournage_id ? (
+                                                <span className="flex items-center gap-1.5 text-blue-600 font-medium">
+                                                    <Link size={13} />
+                                                    {c.tournage_id.titre || 'Lié'}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400">—</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${badge.classe}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.point}`}></span>
                                                 {badge.text}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-right">
+                                        <td className="px-6 py-4 text-right">
                                             <button
-                                                onClick={() => handleDeleteCreneau(creneau._id)}
-                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none transition duration-150"
+                                                onClick={() => handleDelete(c._id)}
+                                                className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                                title="Supprimer le creneau"
                                             >
-                                                Supprimer
+                                                <Trash2 size={15} />
                                             </button>
                                         </td>
                                     </tr>
                                 );
-                            })
-                        )}
-                    </tbody>
-                </table>
+                            })}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );
 };
 
-export default Creneaux;
+export default CalendrierCreneaux;

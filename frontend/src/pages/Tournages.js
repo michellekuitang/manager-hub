@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Calendar, Plus, X, ChevronLeft, ChevronRight, CheckCircle2, Clock, Video, ChevronRight as ArrowRight } from 'lucide-react';
+import { 
+    Calendar, Plus, X, ChevronLeft, ChevronRight, 
+    CheckCircle2, Clock, Video, ArrowRight, Trash2 
+} from 'lucide-react';
 
 const Tournages = () => {
     const [tournages, setTournages] = useState([]);
@@ -18,7 +21,7 @@ const Tournages = () => {
         marque_id: '',
         intervenant_id: '',
         creneau_id: '',
-        statut: 'A tourner',
+        statut: 'A faire',
         type_contenu: 'presentation',
         plateforme: 'Instagram',
         priorite: 'Moyenne',
@@ -74,23 +77,20 @@ const Tournages = () => {
         }
     };
 
-    // CORRECTION 2 : formatCreneau simplifié, reçoit directement l'objet peuplé
     const formatCreneau = (creneauData) => {
-        if (!creneauData) return '—';
+        if (!creneauData) return null;
 
-        // Si c'est un string (ID brut), on cherche dans le state local
         if (typeof creneauData === 'string') {
             const found = creneaux.find(c => String(c._id) === String(creneauData));
-            if (!found) return '—';
+            if (!found) return null;
             creneauData = found;
         }
 
-        // Si c'est un tableau, on prend le premier élément
         if (Array.isArray(creneauData)) {
             creneauData = creneauData[0];
         }
 
-        if (!creneauData || !creneauData.date_debut) return '—';
+        if (!creneauData || !creneauData.date_debut) return null;
 
         const dateDebut = new Date(creneauData.date_debut);
         const dateFin = new Date(creneauData.date_fin || new Date(dateDebut.getTime() + 30 * 60000));
@@ -117,7 +117,7 @@ const Tournages = () => {
             marque_id: t.marque_id && typeof t.marque_id === 'object' ? t.marque_id._id : (t.marque_id || ''),
             intervenant_id: t.intervenant_id && typeof t.intervenant_id === 'object' ? t.intervenant_id._id : (t.intervenant_id || ''),
             creneau_id: targetCreneauId || '',
-            statut: t.statut || 'A tourner',
+            statut: t.statut || 'A faire',
             type_contenu: t.type_contenu || 'presentation',
             plateforme: t.plateforme || 'Instagram',
             priorite: t.priorite || 'Moyenne',
@@ -129,7 +129,7 @@ const Tournages = () => {
     };
 
     const handleAvancerStatut = async (id, currentStatut) => {
-        const etapes = ['A tourner', 'Tourne', 'Monte', 'Publie'];
+        const etapes = ['A faire', 'En cours', 'A valider', 'Valide', 'Publie'];
         const currentIndex = etapes.indexOf(currentStatut);
         if (currentIndex !== -1 && currentIndex < etapes.length - 1) {
             const nextStatut = etapes[currentIndex + 1];
@@ -138,6 +138,21 @@ const Tournages = () => {
                 fetchData();
             } catch (err) {
                 console.error("Erreur lors de l'avancement du statut", err);
+            }
+        }
+    };
+
+    const handleDeleteTournage = async () => {
+        if (!editingId) return;
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce tournage ? Cette action est irréversible.")) {
+            try {
+                await api.delete(`/tournages/${editingId}`);
+                setIsModalOpen(false);
+                resetTournageForm();
+                await fetchData();
+            } catch (err) {
+                console.error('Erreur lors de la suppression', err);
+                setErrorMessage(err.response?.data?.message || "Impossible de supprimer ce tournage.");
             }
         }
     };
@@ -157,10 +172,7 @@ const Tournages = () => {
         setErrorMessage('');
 
         const selectedSlot = form.creneau_id || null;
-        const payload = {
-            ...form,
-            creneau_id: selectedSlot
-        };
+        const payload = { ...form, creneau_id: selectedSlot };
 
         if (payload.intervenant_id === '') payload.intervenant_id = null;
 
@@ -170,7 +182,6 @@ const Tournages = () => {
             } else {
                 await api.post('/tournages', payload);
             }
-
             setIsModalOpen(false);
             resetTournageForm();
             await fetchData();
@@ -206,18 +217,14 @@ const Tournages = () => {
         }
     };
 
-    // CORRECTION 1 : ordre des opérations corrigé pour ne pas perdre savedCreneauId
     const handleCreateTournageFromBooking = () => {
-        // Sauvegarde TOUT avant tout reset
         const savedCreneauId = newCreatedCreneauId;
         const savedIntervenantId = bookingForm.intervenant_id;
         const savedObjet = bookingForm.objet;
 
-        // Ferme la modale booking SANS reset complet
         setIsBookingOpen(false);
         setBookingStep(1);
         setSelectedTime('');
-        // Ne pas reset newCreatedCreneauId ici
 
         setEditingId(null);
         setErrorMessage('');
@@ -227,7 +234,7 @@ const Tournages = () => {
             marque_id: '',
             intervenant_id: savedIntervenantId || '',
             creneau_id: savedCreneauId || '',
-            statut: 'A tourner',
+            statut: 'A faire',
             type_contenu: 'presentation',
             plateforme: 'Instagram',
             priorite: 'Moyenne',
@@ -237,8 +244,6 @@ const Tournages = () => {
         });
 
         setIsModalOpen(true);
-
-        // Reset uniquement à la fin
         setNewCreatedCreneauId(null);
         setBookingForm({ intervenant_id: '', objet: '' });
     };
@@ -247,7 +252,7 @@ const Tournages = () => {
         setEditingId(null);
         setErrorMessage('');
         setForm({
-            titre: '', marque_id: '', intervenant_id: '', creneau_id: '', statut: 'A tourner',
+            titre: '', marque_id: '', intervenant_id: '', creneau_id: '', statut: 'A faire',
             type_contenu: 'presentation', plateforme: 'Instagram', priorite: 'Moyenne',
             date_publication_prevue: '', brief: '', notes_internes: ''
         });
@@ -268,20 +273,12 @@ const Tournages = () => {
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     };
 
-    const stats = tournages.reduce((acc, t) => {
-        if (t.statut === 'A tourner') acc.aTourner++;
-        if (t.statut === 'Tourne') acc.tourne++;
-        if (t.statut === 'Monte') acc.monte++;
-        if (t.statut === 'Publie') acc.publie++;
-        return acc;
-    }, { aTourner: 0, tourne: 0, monte: 0, publie: 0 });
-
     const selectedIntervenantData = intervenants.find(i => i._id === bookingForm.intervenant_id);
 
     if (loading) return <div className="p-6 text-sm text-slate-500 font-medium">Chargement des données...</div>;
 
     return (
-        <div className="p-6 md:p-8 bg-[#f8fafc] h-screen overflow-y-auto flex-1 w-full relative font-sans antialiased text-slate-900">
+        <div className="p-6 md:p-8 bg-[#f8fafc] flex-1 w-full font-sans antialiased text-slate-900">
 
             {/* EN-TÊTE */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -307,27 +304,7 @@ const Tournages = () => {
                 </div>
             </div>
 
-            {/* STATS */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-[#f1f5f9]/60 border border-slate-200 rounded-xl p-5 text-left">
-                    <p className="text-2xl font-bold text-slate-800">{stats.aTourner}</p>
-                    <p className="text-xs text-slate-500 mt-1 font-medium">À tourner</p>
-                </div>
-                <div className="bg-[#eff6ff] border border-blue-100 rounded-xl p-5 text-left">
-                    <p className="text-2xl font-bold text-blue-600">{stats.tourne}</p>
-                    <p className="text-xs text-blue-500 mt-1 font-medium">Tourné</p>
-                </div>
-                <div className="bg-[#fffbeb] border border-amber-100 rounded-xl p-5 text-left">
-                    <p className="text-2xl font-bold text-amber-600">{stats.monte}</p>
-                    <p className="text-xs text-amber-600 mt-1 font-medium">Monté</p>
-                </div>
-                <div className="bg-[#f0fdf4] border border-emerald-100 rounded-xl p-5 text-left">
-                    <p className="text-2xl font-bold text-emerald-600">{stats.publie}</p>
-                    <p className="text-xs text-emerald-600 mt-1 font-medium">Publié</p>
-                </div>
-            </div>
-
-            {/* TABLEAU */}
+            {/* TABLEAU DES TOURNAGES */}
             <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -337,7 +314,7 @@ const Tournages = () => {
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Marque</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Intervenant</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Type</th>
-                                <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Créneau</th>
+                                <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Publication</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Statut</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400">Priorité</th>
                                 <th className="px-6 py-3.5 text-sm font-normal text-slate-400 w-24"></th>
@@ -354,54 +331,72 @@ const Tournages = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                tournages.map(t => (
-                                    <tr
-                                        key={t._id}
-                                        onClick={() => handleSelectTournage(t)}
-                                        className="hover:bg-slate-50/60 transition-colors cursor-pointer"
-                                    >
-                                        <td className="px-6 py-4 text-sm font-semibold text-slate-900">{t.titre}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-400 uppercase tracking-wide">{t.marque_id?.nom || '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-700 font-medium uppercase tracking-wide">
-                                            {t.intervenant_id ? `${t.intervenant_id.nom} ${t.intervenant_id.prenom}` : '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600">
-                                            {t.type_contenu === 'presentation' ? 'Présentation / Démo' : t.type_contenu === 'interview' ? 'Interview' : t.type_contenu === 'vlog' ? 'Vlog' : 'Autre'}
-                                        </td>
-                                        {/* CORRECTION 2 : on passe directement t.creneau_id (déjà peuplé par le backend) */}
-                                        <td className="px-6 py-4 text-sm text-slate-500 font-medium">
-                                            {formatCreneau(t.creneau_id)}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium border ${
-                                                t.statut === 'Publie' ? 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' :
-                                                t.statut === 'Monte' ? 'bg-[#fffbeb] text-amber-600 border-amber-200' :
-                                                t.statut === 'Tourne' ? 'bg-[#eff6ff] text-blue-600 border-blue-200' :
-                                                'bg-slate-50 text-slate-600 border-slate-200'
-                                            }`}>
-                                                {t.statut === 'A tourner' ? 'À tourner' : t.statut === 'Tourne' ? 'Tourné' : t.statut === 'Monte' ? 'Monté' : 'Publié'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <span className={`font-medium ${
-                                                t.priorite?.toLowerCase() === 'haute' ? 'text-red-500' : t.priorite?.toLowerCase() === 'basse' ? 'text-slate-400' : 'text-amber-500'
-                                            }`}>
-                                                {t.priorite || 'Moyenne'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-right">
-                                            {t.statut !== 'Publie' && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleAvancerStatut(t._id, t.statut); }}
-                                                    className="inline-flex items-center gap-1 text-slate-900 font-medium hover:text-slate-600 transition-colors"
-                                                >
-                                                    <span>Avancer</span>
-                                                    <ArrowRight size={14} className="mt-0.5" />
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
+                                tournages.map(t => {
+                                    return (
+                                        <tr
+                                            key={t._id}
+                                            onClick={() => handleSelectTournage(t)}
+                                            className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                                        >
+                                            <td className="px-6 py-4 text-sm font-semibold text-slate-900">{t.titre}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-400 uppercase tracking-wide">{t.marque_id?.nom || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-700 font-medium uppercase tracking-wide">
+                                                {t.intervenant_id ? `${t.intervenant_id.nom} ${t.intervenant_id.prenom}` : '—'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                                {t.type_contenu === 'presentation' ? 'Présentation / Démo'
+                                                    : t.type_contenu === 'interview' ? 'Interview'
+                                                    : t.type_contenu === 'vlog' ? 'Vlog'
+                                                    : 'Autre'}
+                                            </td>
+                                            
+                                            <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                                                {t.date_publication_prevue ? (
+                                                    <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                                        {new Date(t.date_publication_prevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-300 text-xs">Non définie</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm">
+                                                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium border ${
+                                                    t.statut === 'Publie' ? 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' :
+                                                    t.statut === 'Valide' ? 'bg-teal-50 text-teal-600 border-teal-200' :
+                                                    t.statut === 'A valider' ? 'bg-[#fffbeb] text-amber-600 border-amber-200' :
+                                                    t.statut === 'En cours' ? 'bg-[#eff6ff] text-blue-600 border-blue-200' :
+                                                    'bg-slate-50 text-slate-600 border-slate-200'
+                                                }`}>
+                                                    {t.statut === 'A faire' ? 'À faire'
+                                                        : t.statut === 'En cours' ? 'En cours'
+                                                        : t.statut === 'A valider' ? 'À valider'
+                                                        : t.statut === 'Valide' ? 'Validé'
+                                                        : 'Publié'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm">
+                                                <span className={`font-medium ${
+                                                    t.priorite?.toLowerCase() === 'haute' ? 'text-red-500'
+                                                    : t.priorite?.toLowerCase() === 'basse' ? 'text-slate-400'
+                                                    : 'text-amber-500'
+                                                }`}>
+                                                    {t.priorite || 'Moyenne'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-right">
+                                                {t.statut !== 'Publie' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleAvancerStatut(t._id, t.statut); }}
+                                                        className="inline-flex items-center gap-1 text-slate-900 font-medium hover:text-slate-600 transition-colors"
+                                                    >
+                                                        <span>Avancer</span>
+                                                        <ArrowRight size={14} className="mt-0.5" />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
@@ -420,7 +415,9 @@ const Tournages = () => {
                                 </h2>
                                 <p className="text-xs text-slate-500 mt-0.5">Renseignez les détails techniques et logistiques du contenu.</p>
                             </div>
-                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-50 rounded-xl"><X size={18} /></button>
+                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-50 rounded-xl">
+                                <X size={18} />
+                            </button>
                         </div>
 
                         <form onSubmit={handleSaveTournage} className="flex flex-col flex-1 overflow-hidden">
@@ -471,15 +468,14 @@ const Tournages = () => {
                                                 }`}
                                             >
                                                 <option value="" className="text-slate-800 font-normal">Laisser libre (sans créneau)</option>
-                                                {/* CORRECTION 3 : on filtre les créneaux déjà pris par d'autres tournages */}
                                                 {creneaux
                                                     .filter(c =>
                                                         !c.tournage_id ||
-                                                        (editingId && String(c.tournage_id) === String(editingId))
+                                                        (editingId && String(c.tournage_id?._id || c.tournage_id) === String(editingId))
                                                     )
                                                     .map(c => (
                                                         <option key={c._id} value={c._id} className="text-slate-800 font-normal">
-                                                            {formatCreneau(c)} — {c.objet || 'Studio'}
+                                                            {formatCreneau(c) || 'Créneau'} — {c.objet || 'Studio'}
                                                         </option>
                                                     ))
                                                 }
@@ -488,9 +484,10 @@ const Tournages = () => {
                                         <div>
                                             <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Statut de production</label>
                                             <select name="statut" value={form.statut} onChange={handleInputChange} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#3e52b7] cursor-pointer">
-                                                <option value="A tourner">A tourner</option>
-                                                <option value="Tourne">Tourné</option>
-                                                <option value="Monte">Monté</option>
+                                                <option value="A faire">À faire</option>
+                                                <option value="En cours">En cours</option>
+                                                <option value="A valider">À valider</option>
+                                                <option value="Valide">Validé</option>
                                                 <option value="Publie">Publié</option>
                                             </select>
                                         </div>
@@ -529,11 +526,28 @@ const Tournages = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-white border-t border-slate-100 flex justify-end gap-3">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50">Annuler</button>
-                                <button type="submit" className="bg-[#3e52b7] hover:bg-[#34449a] text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md">
-                                    {editingId ? 'Enregistrer les modifications' : 'Valider et créer'}
-                                </button>
+                            {/* FOOTER MODALE */}
+                            <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center gap-3">
+                                {editingId ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteTournage}
+                                        className="flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-xl transition-colors"
+                                    >
+                                        <Trash2 size={15} />
+                                        Supprimer
+                                    </button>
+                                ) : (
+                                    <span />
+                                )}
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50">
+                                        Annuler
+                                    </button>
+                                    <button type="submit" className="bg-[#3e52b7] hover:bg-[#34449a] text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md">
+                                        {editingId ? 'Enregistrer les modifications' : 'Valider et créer'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -596,7 +610,6 @@ const Tournages = () => {
                                                 </button>
                                             ))}
                                         </div>
-
                                         {selectedTime && (
                                             <button type="button" onClick={() => setBookingStep(2)} className="w-full bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-2 rounded-lg text-sm mt-2">
                                                 Continuer
@@ -637,7 +650,6 @@ const Tournages = () => {
                                     <h3 className="text-base font-bold text-slate-900">Réservation créée !</h3>
                                     <p className="text-xs text-slate-500 font-medium">{selectedDay} · {selectedTime} — {getEndTime(selectedTime)}</p>
                                 </div>
-
                                 <div className="flex gap-3 pt-2 justify-center max-w-xs mx-auto">
                                     <button type="button" onClick={resetBookingForm} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-medium py-1.5 rounded-lg text-sm">Fermer</button>
                                     <button type="button" onClick={handleCreateTournageFromBooking} className="flex-1 bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-1.5 rounded-lg text-sm">Créer le tournage</button>
