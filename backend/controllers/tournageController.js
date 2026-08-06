@@ -6,6 +6,14 @@ try {
   // Au cas où le modèle Creneau n'est pas utilisé directement
 }
 
+// Si aucune date de tournage n'est fournie mais qu'un créneau est associé,
+// la date du créneau réservé fait foi.
+const resoudreDateTournage = async (dateTournage, creneauId) => {
+    if (dateTournage || !creneauId || !Creneau) return dateTournage || null;
+    const creneau = await Creneau.findById(creneauId).select('date_debut');
+    return creneau?.date_debut || null;
+};
+
 // @desc    Obtenir tous les tournages
 // @route   GET /api/tournages
 exports.getTournages = async (req, res) => {
@@ -52,6 +60,8 @@ exports.createTournage = async (req, res) => {
             intervenant_id,
             creneau_id,
             statut,
+            date_tournage,
+            lieu,
             type_contenu,
             plateforme,
             priorite,
@@ -60,12 +70,16 @@ exports.createTournage = async (req, res) => {
             notes_internes
         } = req.body;
 
+        const dateTournageResolue = await resoudreDateTournage(date_tournage, creneau_id);
+
         const newTournage = new Tournage({
             titre,
             marque_id: marque_id || null,
             intervenant_id: intervenant_id || null,
             creneau_id: creneau_id || null,
             statut: statut || 'À faire',
+            date_tournage: dateTournageResolue,
+            lieu: lieu || '',
             type_contenu: type_contenu || 'presentation',
             plateforme: plateforme || 'Instagram',
             priorite: priorite || 'Moyenne',
@@ -106,6 +120,13 @@ exports.updateTournage = async (req, res) => {
         if (req.body.intervenant_id === '') tournage.intervenant_id = null;
         if (req.body.marque_id === '') tournage.marque_id = null;
         if (req.body.creneau_id === '') tournage.creneau_id = null;
+        if (req.body.date_tournage === '') tournage.date_tournage = null;
+
+        // Si aucune date de tournage n'est fournie mais qu'un créneau est associé,
+        // la date du créneau réservé fait foi.
+        if (!tournage.date_tournage && tournage.creneau_id) {
+            tournage.date_tournage = await resoudreDateTournage(null, tournage.creneau_id);
+        }
 
         const updatedTournage = await tournage.save();
 

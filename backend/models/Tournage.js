@@ -25,6 +25,14 @@ const tournageSchema = new mongoose.Schema(
       type: String,
       default: 'À faire'
     },
+    date_tournage: {
+      type: Date,
+      default: null
+    },
+    lieu: {
+      type: String,
+      default: ''
+    },
     type_contenu: {
       type: String,
       default: 'presentation'

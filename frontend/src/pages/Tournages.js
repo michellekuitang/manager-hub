@@ -14,15 +14,23 @@ const normalizeStatut = (statutRaw) => {
     if (s.includes('valider')) return 'A valider';
     if (s.includes('valide')) return 'Valide';
     if (s.includes('publi')) return 'Publie';
-    return 'A faire'; // Sécurité : fallback sur "A faire" et NON "Publié"
+    return 'A faire'; // S\u00e9curit\u00e9 : fallback sur "A faire" et NON "Publi\u00e9"
 };
 
 const STATUTS_CONFIG = {
-    'A faire': { label: 'À faire', style: 'bg-slate-50 text-slate-600 border-slate-200' },
+    'A faire': { label: '\u00c0 faire', style: 'bg-slate-50 text-slate-600 border-slate-200' },
     'En cours': { label: 'En cours', style: 'bg-[#eff6ff] text-blue-600 border-blue-200' },
-    'A valider': { label: 'À valider', style: 'bg-[#fffbeb] text-amber-600 border-amber-200' },
-    'Valide': { label: 'Validé', style: 'bg-teal-50 text-teal-600 border-teal-200' },
-    'Publie': { label: 'Publié', style: 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' }
+    'A valider': { label: '\u00c0 valider', style: 'bg-[#fffbeb] text-amber-600 border-amber-200' },
+    'Valide': { label: 'Valid\u00e9', style: 'bg-teal-50 text-teal-600 border-teal-200' },
+    'Publie': { label: 'Publi\u00e9', style: 'bg-[#f0fdf4] text-emerald-600 border-emerald-200' }
+};
+
+// Helper pour obtenir le lundi de la semaine d'une date donnée
+const getMonday = (d) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Ajustement si dimanche
+    return new Date(date.setDate(diff));
 };
 
 const Tournages = () => {
@@ -42,6 +50,8 @@ const Tournages = () => {
         intervenant_id: '',
         creneau_id: '',
         statut: 'A faire',
+        date_tournage: '',
+        lieu: '',
         type_contenu: 'presentation',
         plateforme: 'Instagram',
         priorite: 'Moyenne',
@@ -53,8 +63,12 @@ const Tournages = () => {
     const [isBookingOpen, setIsBookingOpen] = useState(false);
     const [bookingStep, setBookingStep] = useState(1);
     const [bookingError, setBookingError] = useState('');
-    const [selectedDay, setSelectedDay] = useState('JEU. 16');
+    
+    // Gestion dynamique de la semaine de réservation
+    const [currentWeekStart, setCurrentWeekStart] = useState(() => getMonday(new Date()));
+    const [selectedDateObj, setSelectedDateObj] = useState(new Date());
     const [selectedTime, setSelectedTime] = useState('');
+    
     const [bookingForm, setBookingForm] = useState({
         intervenant_id: '',
         objet: ''
@@ -67,13 +81,35 @@ const Tournages = () => {
         '16:00', '16:30'
     ];
 
-    const weekDays = [
-        { label: 'LUN.', num: '13' },
-        { label: 'MAR.', num: '14' },
-        { label: 'MER.', num: '15' },
-        { label: 'JEU.', num: '16' },
-        { label: 'VEN.', num: '17' }
-    ];
+    // Génération dynamique des 5 jours (Lundi -> Vendredi) de la semaine active
+    const weekDays = Array.from({ length: 5 }, (_, i) => {
+        const d = new Date(currentWeekStart);
+        d.setDate(currentWeekStart.getDate() + i);
+        
+        const labelsMap = ['DIM.', 'LUN.', 'MAR.', 'MER.', 'JEU.', 'VEN.', 'SAM.'];
+        return {
+            label: labelsMap[d.getDay()],
+            num: String(d.getDate()).padStart(2, '0'),
+            fullDate: d
+        };
+    });
+
+    // Navigation semaines
+    const handlePreviousWeek = () => {
+        setCurrentWeekStart(prev => {
+            const next = new Date(prev);
+            next.setDate(prev.getDate() - 7);
+            return next;
+        });
+    };
+
+    const handleNextWeek = () => {
+        setCurrentWeekStart(prev => {
+            const next = new Date(prev);
+            next.setDate(prev.getDate() + 7);
+            return next;
+        });
+    };
 
     useEffect(() => {
         fetchData();
@@ -139,6 +175,8 @@ const Tournages = () => {
             intervenant_id: t.intervenant_id && typeof t.intervenant_id === 'object' ? t.intervenant_id._id : (t.intervenant_id || ''),
             creneau_id: targetCreneauId || '',
             statut: normalizeStatut(t.statut),
+            date_tournage: t.date_tournage ? t.date_tournage.slice(0, 10) : '',
+            lieu: t.lieu || '',
             type_contenu: t.type_contenu || 'presentation',
             plateforme: t.plateforme || 'Instagram',
             priorite: t.priorite || 'Moyenne',
@@ -205,11 +243,11 @@ const Tournages = () => {
     const handleConfirmBooking = async () => {
         setBookingError('');
         try {
-            const dayNum = parseInt(selectedDay.split(' ')[1], 10);
             const [hours, minutes] = selectedTime.split(':').map(Number);
             
-            const now = new Date();
-            const dateDebut = new Date(now.getFullYear(), now.getMonth(), dayNum, hours, minutes);
+            const dateDebut = new Date(selectedDateObj);
+            dateDebut.setHours(hours, minutes, 0, 0);
+            
             const dateFin = new Date(dateDebut.getTime() + 30 * 60000);
 
             const res = await api.post('/creneaux', {
@@ -250,6 +288,8 @@ const Tournages = () => {
             intervenant_id: savedIntervenantId || '',
             creneau_id: savedCreneauId || '',
             statut: 'A faire',
+            date_tournage: '',
+            lieu: '',
             type_contenu: 'presentation',
             plateforme: 'Instagram',
             priorite: 'Moyenne',
@@ -268,6 +308,7 @@ const Tournages = () => {
         setErrorMessage('');
         setForm({
             titre: '', marque_id: '', intervenant_id: '', creneau_id: '', statut: 'A faire',
+            date_tournage: '', lieu: '',
             type_contenu: 'presentation', plateforme: 'Instagram', priorite: 'Moyenne',
             date_publication_prevue: '', brief: '', notes_internes: ''
         });
@@ -278,6 +319,7 @@ const Tournages = () => {
         setBookingStep(1);
         setBookingError('');
         setSelectedTime('');
+        setCurrentWeekStart(getMonday(new Date()));
         setBookingForm({ intervenant_id: '', objet: '' });
     };
 
@@ -290,6 +332,9 @@ const Tournages = () => {
     };
 
     const selectedIntervenantData = intervenants.find(i => i._id === bookingForm.intervenant_id);
+
+    // Formatage texte de la date sélectionnée pour l'étape 2 et 3
+    const formattedSelectedDayStr = selectedDateObj.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
 
     if (loading) return <div className="p-6 text-sm text-slate-500 font-medium">Chargement des données...</div>;
 
@@ -304,7 +349,12 @@ const Tournages = () => {
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button
-                        onClick={() => { setIsBookingOpen(true); setBookingStep(1); }}
+                        onClick={() => { 
+                            setCurrentWeekStart(getMonday(new Date())); 
+                            setSelectedDateObj(new Date());
+                            setIsBookingOpen(true); 
+                            setBookingStep(1); 
+                        }}
                         className="flex-1 sm:flex-none justify-center bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all"
                     >
                         <Calendar size={16} className="text-slate-400" />
@@ -492,6 +542,35 @@ const Tournages = () => {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                                Date de tournage
+                                            </label>
+                                            <input
+                                                type="date"
+                                                name="date_tournage"
+                                                value={form.date_tournage}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-[#3e52b7]"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                                Lieu
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="lieu"
+                                                value={form.lieu}
+                                                onChange={handleInputChange}
+                                                placeholder="Studio, Campus Paris, exterieur..."
+                                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-[#3e52b7]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
                                             <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Format de contenu</label>
                                             <select name="type_contenu" value={form.type_contenu} onChange={handleInputChange} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-[#3e52b7] cursor-pointer">
                                                 <option value="interview">Interview face cam</option>
@@ -578,23 +657,30 @@ const Tournages = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center bg-slate-50 py-1.5 px-3 rounded-lg border border-slate-100">
-                                    <button type="button" className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronLeft size={14} /></button>
-                                    <span className="text-xs font-bold text-slate-600">Semaine en cours</span>
-                                    <button type="button" className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronRight size={14} /></button>
+                                    <button type="button" onClick={handlePreviousWeek} className="p-1 hover:bg-slate-200 rounded text-slate-500 cursor-pointer"><ChevronLeft size={14} /></button>
+                                    <span className="text-xs font-bold text-slate-600">
+                                        Semaine du {weekDays[0].fullDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                    <button type="button" onClick={handleNextWeek} className="p-1 hover:bg-slate-200 rounded text-slate-500 cursor-pointer"><ChevronRight size={14} /></button>
                                 </div>
 
                                 <div className="grid grid-cols-5 gap-2 text-center">
-                                    {weekDays.map(d => (
-                                        <button
-                                            key={d.num} type="button" onClick={() => setSelectedDay(`${d.label} ${d.num}`)}
-                                            className={`p-2 rounded-lg border text-center transition-all ${
-                                                selectedDay === `${d.label} ${d.num}` ? 'bg-[#3e52b7] text-white font-medium border-[#3e52b7]' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
-                                            }`}
-                                        >
-                                            <p className="text-[10px] opacity-70 font-medium">{d.label}</p>
-                                            <p className="text-sm font-bold mt-0.5">{d.num}</p>
-                                        </button>
-                                    ))}
+                                    {weekDays.map(d => {
+                                        const isSelected = selectedDateObj.toDateString() === d.fullDate.toDateString();
+                                        return (
+                                            <button
+                                                key={d.num + d.label} 
+                                                type="button" 
+                                                onClick={() => setSelectedDateObj(d.fullDate)}
+                                                className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
+                                                    isSelected ? 'bg-[#3e52b7] text-white font-medium border-[#3e52b7]' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+                                                }`}
+                                            >
+                                                <p className="text-[10px] opacity-70 font-medium">{d.label}</p>
+                                                <p className="text-sm font-bold mt-0.5">{d.num}</p>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
                                 {bookingForm.intervenant_id && (
@@ -604,7 +690,7 @@ const Tournages = () => {
                                             {availableSlots.map(slot => (
                                                 <button
                                                     key={slot} type="button" onClick={() => setSelectedTime(slot)}
-                                                    className={`py-1.5 px-2 rounded-lg text-center border text-xs font-medium flex items-center justify-center gap-1 transition-all ${
+                                                    className={`py-1.5 px-2 rounded-lg text-center border text-xs font-medium flex items-center justify-center gap-1 transition-all cursor-pointer ${
                                                         selectedTime === slot ? 'bg-[#3e52b7] text-white border-[#3e52b7]' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                                                     }`}
                                                 >
@@ -614,7 +700,7 @@ const Tournages = () => {
                                             ))}
                                         </div>
                                         {selectedTime && (
-                                            <button type="button" onClick={() => setBookingStep(2)} className="w-full bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-2 rounded-lg text-sm mt-2">
+                                            <button type="button" onClick={() => setBookingStep(2)} className="w-full bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-2 rounded-lg text-sm mt-2 cursor-pointer">
                                                 Continuer
                                             </button>
                                         )}
@@ -629,7 +715,7 @@ const Tournages = () => {
                                     <p className="text-xs font-bold text-slate-800 uppercase tracking-wide">
                                         {selectedIntervenantData ? `${selectedIntervenantData.nom} ${selectedIntervenantData.prenom}` : 'Intervenant sélectionné'}
                                     </p>
-                                    <p className="text-xs text-slate-500 font-medium mt-0.5">{selectedDay} · {selectedTime} — {getEndTime(selectedTime)}</p>
+                                    <p className="text-xs text-slate-500 font-medium mt-0.5">{formattedSelectedDayStr} · {selectedTime} — {getEndTime(selectedTime)}</p>
                                 </div>
 
                                 <div>
@@ -638,8 +724,8 @@ const Tournages = () => {
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
-                                    <button type="button" onClick={() => setBookingStep(1)} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-medium py-2 rounded-lg text-sm">Retour</button>
-                                    <button type="button" onClick={handleConfirmBooking} className="flex-1 bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-2 rounded-lg text-sm">Confirmer la réservation</button>
+                                    <button type="button" onClick={() => setBookingStep(1)} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-medium py-2 rounded-lg text-sm cursor-pointer">Retour</button>
+                                    <button type="button" onClick={handleConfirmBooking} className="flex-1 bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-2 rounded-lg text-sm cursor-pointer">Confirmer la réservation</button>
                                 </div>
                             </div>
                         )}
@@ -651,11 +737,11 @@ const Tournages = () => {
                                 </div>
                                 <div className="space-y-0.5">
                                     <h3 className="text-base font-bold text-slate-900">Réservation créée !</h3>
-                                    <p className="text-xs text-slate-500 font-medium">{selectedDay} · {selectedTime} — {getEndTime(selectedTime)}</p>
+                                    <p className="text-xs text-slate-500 font-medium">{formattedSelectedDayStr} · {selectedTime} — {getEndTime(selectedTime)}</p>
                                 </div>
                                 <div className="flex gap-3 pt-2 justify-center max-w-xs mx-auto">
-                                    <button type="button" onClick={resetBookingForm} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-medium py-1.5 rounded-lg text-sm">Fermer</button>
-                                    <button type="button" onClick={handleCreateTournageFromBooking} className="flex-1 bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-1.5 rounded-lg text-sm">Créer le tournage</button>
+                                    <button type="button" onClick={resetBookingForm} className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-medium py-1.5 rounded-lg text-sm cursor-pointer">Fermer</button>
+                                    <button type="button" onClick={handleCreateTournageFromBooking} className="flex-1 bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium py-1.5 rounded-lg text-sm cursor-pointer">Créer le tournage</button>
                                 </div>
                             </div>
                         )}

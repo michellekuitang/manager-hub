@@ -14,7 +14,8 @@ const intervenantRoutes = require('./routes/intervenants');
 const iaRoutes = require('./routes/ia');
 const equipeRoutes = require('./routes/equipe');
 const templateRoutes = require('./routes/templates');
-const creneauRoutes = require('./routes/creneaux'); // ✨ AJOUT : Import de la route des créneaux
+const creneauRoutes = require('./routes/creneaux'); //  AJOUT : Import de la route des créneaux
+const rapportRoutes = require('./routes/rapport');
 
 const app = express();
 
@@ -39,7 +40,7 @@ app.use('/api/ia', iaRoutes);
 app.use('/api/equipe', equipeRoutes); 
 app.use('/api/templates', templateRoutes);
 app.use('/api/creneaux', creneauRoutes); // ✨ AJOUT : Activation de l'endpoint pour le Frontend
-
+app.use('/api/rapports', rapportRoutes); // ✨ AJOUT : Activation de l'endpoint pour le Frontend
 // ===== DÉMARRAGE =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

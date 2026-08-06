@@ -13,6 +13,7 @@ import NotFound from './pages/NotFound';
 import Equipes from './pages/Equipes';
 import Templates from './pages/Templates';
 import Creneaux from './pages/Creneaux';
+import Rapport from './pages/Rapport';
 
 const PrivateRoute = ({ children }) => {
     const { token, loading } = useAuth();
@@ -87,7 +88,13 @@ const App = () => {
                             <Layout><GenerateurIA /></Layout>
                         </PrivateRoute>
                     } />
-                    
+
+                    <Route path="/rapport" element={
+                        <PrivateRoute>
+                            <Layout><Rapport /></Layout>
+                        </PrivateRoute>
+                    } />
+
                     <Route path="/" element={<Navigate to="/dashboard" />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>

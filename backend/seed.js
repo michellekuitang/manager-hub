@@ -1,49 +1,41 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-require('dotenv').config();
+const Utilisateur = require('./models/Utilisateur');
 
-// Chargement du modèle User (ou définition par défaut)
-let User;
-try {
-  User = require('./models/User');
-} catch (e) {
-  const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    nom: { type: String, default: 'Michelle' },
-    role: { type: String, default: 'admin' }
-  });
-  User = mongoose.model('User', userSchema);
-}
+const seedUser = async () => {
+    try {
+        const mongoUri = process.env.MONGO_URI || 'mongodb://mongo:27017/manager-hub';
+        await mongoose.connect(mongoUri);
+        console.log('Connecté à MongoDB pour réinitialiser le compte...');
 
-const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://mongo:27017/manager-hub';
+        const email = 'michelle@test.com';
+        const password = 'password123';
 
-async function seed() {
-  try {
-    await mongoose.connect(mongoUri);
-    console.log('Connecté à MongoDB...');
+        // Supprime l'ancien compte s'il existe
+        await Utilisateur.deleteOne({ email });
 
-    const hashedPassword = await bcrypt.hash('123456', 10);
+        // Hash exact comme dans register()
+        const mot_de_passe_hash = await bcrypt.hash(password, 10);
 
-    const user = await User.findOneAndUpdate(
-      { email: 'michelle@test.com' },
-      { 
-        email: 'michelle@test.com', 
-        password: hashedPassword,
-        nom: 'Michelle'
-      },
-      { upsert: true, new: true }
-    );
+        // Création avec les champs exacts attendus par login()
+        await Utilisateur.create({
+            nom: 'Kuitang',
+            prenom: 'Michelle',
+            email: email,
+            mot_de_passe_hash: mot_de_passe_hash,
+            role: 'admin'
+        });
 
-    console.log('Compte prêt !');
-    console.log('Email    : michelle@test.com');
-    console.log('Password : 123456');
+        console.log('✅ Compte utilisateur créé avec succès !');
+        console.log(`Email : ${email}`);
+        console.log(`Mot de passe : ${password}`);
 
-    process.exit(0);
-  } catch (error) {
-    console.error('Erreur lors du seed :', error);
-    process.exit(1);
-  }
-}
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Erreur lors du seed :', error);
+        process.exit(1);
+    }
+};
 
-seed();
+seedUser();

@@ -1,19 +1,5 @@
-const Contenu = require('../models/Contenu');
-const Tournage = require('../models/Tournage'); // 🔧 Synchronisation avec les tournages
-
-// Normalise les statuts reçus du front-end (avec ou sans accents)
-const NORMALISER_STATUT = (statut) => {
-    if (!statut) return 'À faire';
-    const map = {
-        'A faire': 'À faire',
-        'En cours': 'En cours',
-        'A valider': 'À valider',
-        'Valide': 'Validé',
-        'Publie': 'Publié',
-        'BROUILLON': 'À faire'
-    };
-    return map[statut] || statut;
-};
+const Contenu = require('../models/Contenu'); // Assure-toi que le chemin vers le modèle est correct
+const Tournage = require('../models/Tournage'); // Requis pour la répercussion du statut
 
 // Transitions autorisées alignées sur les colonnes du Kanban React
 const TRANSITIONS_AUTORISEES = {
@@ -22,6 +8,24 @@ const TRANSITIONS_AUTORISEES = {
     'À valider': ['En cours', 'Validé'],
     'Validé': ['À valider', 'Publié'],
     'Publié': ['Validé']
+};
+
+// Helper pour normaliser la casse et les accents des statuts si nécessaire
+const NORMALISER_STATUT = (statut) => {
+    if (!statut) return 'À faire';
+    // Gère les variations courantes pour correspondre exactement aux clés du Kanban
+    const mapping = {
+        'a faire': 'À faire',
+        'à faire': 'À faire',
+        'en cours': 'En cours',
+        'a valider': 'À valider',
+        'à valider': 'À valider',
+        'valide': 'Validé',
+        'validé': 'Validé',
+        'publie': 'Publié',
+        'publié': 'Publié'
+    };
+    return mapping[statut.toLowerCase()] || statut;
 };
 
 // Helper réutilisable pour populer l'auteur, le responsable, le tournage et la marque
@@ -60,32 +64,23 @@ exports.getContenuById = async (req, res) => {
     }
 };
 
-// Créer un nouveau contenu
+// Créer un nouveau contenu (Fonction complétée)
 exports.createContenu = async (req, res) => {
     try {
-        const currentUserId = req.user?.id || req.user?._id || req.body.auteur || req.body.responsable_id || null;
-
-        // Normalisation du statut envoyé par le client
-        const statutNormalise = NORMALISER_STATUT(req.body.statut_workflow);
-        const validStatuts = ['À faire', 'En cours', 'À valider', 'Validé', 'Publié'];
-        const statutFinal = validStatuts.includes(statutNormalise) ? statutNormalise : 'À faire';
-
-        const nouveauContenu = new Contenu({
-            ...req.body,
-            statut_workflow: statutFinal,
-            auteur: req.body.auteur || currentUserId,
-            responsable_id: req.body.responsable_id || currentUserId
-        });
-
-        const savedContenu = await nouveauContenu.save();
-
-        // ⚡ Synchronisation bi-directionnelle avec le tournage associé
-        if (savedContenu.tournage_id) {
-            await Tournage.findByIdAndUpdate(savedContenu.tournage_id, { statut: statutFinal });
+        const data = { ...req.body };
+        if (data.statut_workflow) {
+            data.statut_workflow = NORMALISER_STATUT(data.statut_workflow);
         }
 
-        const populatedContenu = await populateContenu(Contenu.findById(savedContenu._id));
+        const nouveauContenu = new Contenu(data);
+        const contenuSauvegardee = await nouveauContenu.save();
 
+        // Répercuter le statut sur le tournage lié s'il existe
+        if (contenuSauvegardee.tournage_id && contenuSauvegardee.statut_workflow) {
+            await Tournage.findByIdAndUpdate(contenuSauvegardee.tournage_id, { statut: contenuSauvegardee.statut_workflow });
+        }
+
+        const populatedContenu = await populateContenu(Contenu.findById(contenuSauvegardee._id));
         res.status(201).json(populatedContenu);
     } catch (error) {
         console.error('Erreur createContenu :', error);
@@ -111,7 +106,7 @@ exports.updateContenu = async (req, res) => {
             return res.status(404).json({ message: 'Contenu non trouvé' });
         }
 
-        // ⚡ Répercuter le statut sur le tournage lié s'il a changé
+        // Répercuter le statut sur le tournage lié s'il a changé
         if (contenuModifie.tournage_id && updateData.statut_workflow) {
             await Tournage.findByIdAndUpdate(contenuModifie.tournage_id, { statut: updateData.statut_workflow });
         }
@@ -151,7 +146,7 @@ exports.updateStatutContenu = async (req, res) => {
         contenu.statut_workflow = nouveauStatut;
         await contenu.save();
 
-        // ⚡ Mise à jour automatique du statut du tournage parent
+        // Mise à jour automatique du statut du tournage parent
         if (contenu.tournage_id) {
             await Tournage.findByIdAndUpdate(contenu.tournage_id, { statut: nouveauStatut });
         }
