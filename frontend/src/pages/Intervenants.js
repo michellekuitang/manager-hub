@@ -143,14 +143,14 @@ const Intervenants = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Intervenants</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Intervenants</h1>
                     <p className="text-sm text-slate-500 mt-1">
                         {intervenantsFiltres.length} sur {intervenants.length} profils enregistrés
                     </p>
                 </div>
                 <button
                     onClick={handleOpenCreate}
-                    className="bg-[#3b82f6] hover:bg-blue-600 text-white font-medium text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm"
+                    className="bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm"
                 >
                     <Plus size={16} />
                     <span>Ajouter un intervenant</span>
@@ -166,14 +166,14 @@ const Intervenants = () => {
                         placeholder="Rechercher un intervenant..."
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-all shadow-sm"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#3e52b7] transition-all shadow-sm"
                     />
                 </div>
 
                 <select
                     value={filtreMarque}
                     onChange={(e) => setFiltreMarque(e.target.value)}
-                    className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer min-w-[140px] shadow-sm"
+                    className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#3e52b7] cursor-pointer min-w-[140px] shadow-sm"
                 >
                     {marquesFiltre.map((nom) => (
                         <option key={nom} value={nom}>{nom === 'Tous' ? 'Tous' : nom}</option>
@@ -214,7 +214,7 @@ const Intervenants = () => {
                                             {/* Colonne Identité */}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs flex items-center justify-center tracking-wider shrink-0">
+                                                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-[#3e52b7] font-semibold text-xs flex items-center justify-center tracking-wider shrink-0">
                                                         {i.prenom?.charAt(0).toUpperCase()}{i.nom?.charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className="font-semibold text-slate-900">
@@ -235,7 +235,7 @@ const Intervenants = () => {
 
                                             {/* Rôle */}
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 text-blue-600">
+                                                <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-50 text-[#3e52b7]">
                                                     {i.role || 'Intervenant'}
                                                 </span>
                                             </td>
@@ -251,7 +251,7 @@ const Intervenants = () => {
                                                     {numeroTel && (
                                                         <button
                                                             onClick={(e) => handleCopy(numeroTel, i._id, 'telephone', e)}
-                                                            className="text-slate-400 hover:text-blue-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                                                            className="text-slate-400 hover:text-[#3e52b7] p-1 rounded-lg hover:bg-slate-100 transition-colors"
                                                             title="Copier le numéro"
                                                         >
                                                             {copieId.id === i._id && copieId.type === 'telephone' ? <Check size={14} className="text-green-600" /> : <Phone size={14} />}
@@ -260,7 +260,7 @@ const Intervenants = () => {
                                                     {i.email && (
                                                         <button
                                                             onClick={(e) => handleCopy(i.email, i._id, 'email', e)}
-                                                            className="text-slate-400 hover:text-blue-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                                                            className="text-slate-400 hover:text-[#3e52b7] p-1 rounded-lg hover:bg-slate-100 transition-colors"
                                                             title="Copier l'email"
                                                         >
                                                             {copieId.id === i._id && copieId.type === 'email' ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
@@ -295,33 +295,33 @@ const Intervenants = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nom</label>
-                                    <input type="text" required value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors" />
+                                    <input type="text" required value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Prénom</label>
-                                    <input type="text" required value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors" />
+                                    <input type="text" required value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Email</label>
-                                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors" />
+                                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Téléphone</label>
-                                    <input type="text" value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors" />
+                                    <input type="text" value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Rôle</label>
-                                    <input type="text" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors" />
+                                    <input type="text" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Marque / École</label>
-                                    <select required value={formData.marque_id} onChange={(e) => setFormData({ ...formData, marque_id: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-slate-400 transition-colors cursor-pointer">
+                                    <select required value={formData.marque_id} onChange={(e) => setFormData({ ...formData, marque_id: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7] transition-colors cursor-pointer">
                                         <option value="" disabled>Choisir une marque</option>
                                         {marques.map((m) => (
                                             <option key={m._id} value={m._id}>{m.nom}</option>
@@ -331,7 +331,7 @@ const Intervenants = () => {
                             </div>
 
                             <div className="flex items-center gap-2 pt-2">
-                                <input type="checkbox" id="actif" checked={formData.actif} onChange={(e) => setFormData({ ...formData, actif: e.target.checked })} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                <input type="checkbox" id="actif" checked={formData.actif} onChange={(e) => setFormData({ ...formData, actif: e.target.checked })} className="w-3.5 h-3.5 rounded border-slate-300 text-[#3e52b7] focus:ring-[#3e52b7]" />
                                 <label htmlFor="actif" className="text-xs text-slate-600 select-none cursor-pointer font-medium">Profil actif et disponible</label>
                             </div>
 
@@ -347,7 +347,7 @@ const Intervenants = () => {
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
                                         Annuler
                                     </button>
-                                    <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-sm">
+                                    <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-[#3e52b7] hover:bg-[#34449a] rounded-lg transition-colors shadow-sm">
                                         {isEditing ? 'Enregistrer' : 'Créer'}
                                     </button>
                                 </div>

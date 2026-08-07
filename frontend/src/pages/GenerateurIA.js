@@ -65,8 +65,33 @@ const GenerateurIA = () => {
     // Découpe la chaîne de hashtags en pastilles individuelles copiables
     const parseHashtags = (texte) => (texte || '').split(/\s+/).filter(Boolean);
 
+    // Copie l'intégralité de ce que l'IA a généré (post + concept de production + notes)
     const copierLePost = () => {
-        const morceaux = [resultat?.titre, resultat?.legende, resultat?.hashtags].filter(Boolean);
+        if (!resultat) return;
+        const morceaux = [];
+
+        if (resultat.titre) morceaux.push(resultat.titre);
+        if (resultat.legende) morceaux.push(resultat.legende);
+        if (resultat.hashtags) morceaux.push(resultat.hashtags);
+
+        if (Array.isArray(resultat.concept_production) && resultat.concept_production.length > 0) {
+            morceaux.push(
+                'Concept de production :\n' +
+                resultat.concept_production.map((etape, idx) => `${idx + 1}. ${etape}`).join('\n')
+            );
+        }
+
+        if (resultat.brief) {
+            morceaux.push(`Brief de production :\n${resultat.brief}`);
+        }
+
+        if (Array.isArray(resultat.variantes) && resultat.variantes.length > 0) {
+            morceaux.push(
+                'Variantes :\n' +
+                resultat.variantes.map((v, idx) => `${idx + 1}. ${v}`).join('\n')
+            );
+        }
+
         handleCopy(morceaux.join('\n\n'), 'post-complet');
     };
 

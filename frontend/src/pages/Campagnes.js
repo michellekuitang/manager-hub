@@ -167,7 +167,7 @@ const Campagnes = () => {
     if (loading) {
         return (
             <div className="flex flex-col justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#3b51a3]"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#3e52b7]"></div>
                 <span className="ml-3 text-slate-500 text-sm font-medium mt-4">Chargement...</span>
             </div>
         );
@@ -178,7 +178,7 @@ const Campagnes = () => {
             {/* Titre & Bouton d'action */}
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Campagnes</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Campagnes</h1>
                     <p className="text-slate-400 text-sm mt-1">Google Ads & publicité</p>
                 </div>
                 <button
@@ -186,7 +186,7 @@ const Campagnes = () => {
                         setSelectedCampagne(null);
                         setIsModalOpen(true);
                     }}
-                    className="inline-flex items-center px-5 py-2.5 bg-[#3b51a3] hover:bg-[#2f4185] text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150"
+                    className="inline-flex items-center px-5 py-2.5 bg-[#3e52b7] hover:bg-[#34449a] text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150"
                 >
                     <span className="mr-2 text-lg font-medium">+</span> Nouvelle campagne
                 </button>
@@ -206,7 +206,7 @@ const Campagnes = () => {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Actives</p>
                         <p className="text-2xl font-bold text-slate-800 mt-1">{activeCount}</p>
                     </div>
-                    <div className="p-2.5 bg-indigo-50/60 text-[#3b51a3] rounded-xl flex items-center justify-center w-10 h-10">
+                    <div className="p-2.5 bg-indigo-50/60 text-[#3e52b7] rounded-xl flex items-center justify-center w-10 h-10">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                         </svg>
@@ -219,7 +219,7 @@ const Campagnes = () => {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Budget Dépensé</p>
                         <p className="text-2xl font-bold text-slate-800 mt-1">{totalSpent.toLocaleString('fr-FR')}€</p>
                     </div>
-                    <div className="p-2.5 bg-indigo-50/60 text-[#3b51a3] rounded-xl flex items-center justify-center w-10 h-10">
+                    <div className="p-2.5 bg-indigo-50/60 text-[#3e52b7] rounded-xl flex items-center justify-center w-10 h-10">
                         <span className="text-base font-extrabold">$</span>
                     </div>
                 </div>
@@ -230,7 +230,7 @@ const Campagnes = () => {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Leads Total</p>
                         <p className="text-2xl font-bold text-slate-800 mt-1">{totalLeadsCount.toLocaleString('fr-FR')}</p>
                     </div>
-                    <div className="p-2.5 bg-indigo-50/60 text-[#3b51a3] rounded-xl flex items-center justify-center w-10 h-10">
+                    <div className="p-2.5 bg-indigo-50/60 text-[#3e52b7] rounded-xl flex items-center justify-center w-10 h-10">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" strokeWidth="2" />
                             <circle cx="12" cy="12" r="6" strokeWidth="2" />
@@ -245,7 +245,7 @@ const Campagnes = () => {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coût/Lead Moyen</p>
                         <p className="text-2xl font-bold text-slate-800 mt-1">{avgCPL.toFixed(2)}€</p>
                     </div>
-                    <div className="p-2.5 bg-indigo-50/60 text-[#3b51a3] rounded-xl flex items-center justify-center w-10 h-10">
+                    <div className="p-2.5 bg-indigo-50/60 text-[#3e52b7] rounded-xl flex items-center justify-center w-10 h-10">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
@@ -511,7 +511,7 @@ const Campagnes = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-5 py-2.5 bg-[#3b51a3] hover:bg-[#2f4185] text-white rounded-xl text-sm font-semibold shadow-sm transition"
+                                        className="px-5 py-2.5 bg-[#3e52b7] hover:bg-[#34449a] text-white rounded-xl text-sm font-semibold shadow-sm transition"
                                     >
                                         Sauvegarder
                                     </button>

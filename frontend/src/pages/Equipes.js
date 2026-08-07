@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Search, X, Trash2, Copy, Grid, List, Users, CheckCircle } from 'lucide-react';
+import { Plus, Search, X, Trash2, Copy, Check, Mail, Phone } from 'lucide-react';
 
 const Equipes = () => {
     const [membres, setMembres] = useState([]);
     const [marques, setMarques] = useState([]);
     const [loading, setLoading] = useState(true);
     const [recherche, setRecherche] = useState('');
-    const [viewMode, setViewMode] = useState('grid');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
+
+    const [copieId, setCopieId] = useState({ id: null, type: null });
 
     const [formData, setFormData] = useState({
         nom: '',
@@ -43,14 +44,10 @@ const Equipes = () => {
         fetchData();
     }, []);
 
-    const membresFiltrés = membres.filter((m) => {
+    const membresFiltres = membres.filter((m) => {
         const nomComplet = `${m.prenom} ${m.nom}`.toLowerCase();
         return nomComplet.includes(recherche.toLowerCase()) || m.role?.toLowerCase().includes(recherche.toLowerCase());
     });
-
-    // Statistiques épurées
-    const totalMembres = membres.length;
-    const membresActifs = membres.filter(m => m.actif).length;
 
     const handleOpenCreateModal = () => {
         setIsEditing(false);
@@ -102,205 +99,133 @@ const Equipes = () => {
         }
     };
 
-    const copierTelephone = (e, telephone) => {
+    const handleCopy = (text, id, type, e) => {
         e.stopPropagation();
-        if (!telephone) return alert("Aucun numéro renseigné.");
-        navigator.clipboard.writeText(telephone);
-        alert(`Numéro ${telephone} copié !`);
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        setCopieId({ id, type });
+        setTimeout(() => setCopieId({ id: null, type: null }), 1200);
     };
 
-    if (loading) {
-        return <div className="p-8 text-gray-500 font-medium text-center">Chargement des données...</div>;
-    }
+    if (loading) return <div className="p-8 text-slate-500 font-medium text-center">Chargement des données...</div>;
 
     return (
-        <div className="p-8 bg-gray-50 min-h-screen flex-1">
+        <div className="p-8 bg-[#f8fafc] min-h-screen flex-1">
+
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#111827]">Équipe</h1>
-                    <p className="text-sm text-gray-500 mt-1">Gérez les membres de votre organisation et leurs accès.</p>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Équipe</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        {membresFiltres.length} sur {membres.length} membres enregistrés
+                    </p>
                 </div>
                 <button
                     onClick={handleOpenCreateModal}
-                    className="bg-[#3b82f6] hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-colors text-sm"
+                    className="bg-[#3e52b7] hover:bg-[#34449a] text-white font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-colors text-sm"
                 >
-                    <Plus size={18} />
+                    <Plus size={16} />
                     <span>Ajouter un membre</span>
                 </button>
             </div>
 
-            {/* Statistiques d'équipe - Passage en 2 colonnes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600"><Users size={22} /></div>
-                    <div>
-                        <p className="text-sm text-gray-500 font-medium">Effectif Total</p>
-                        <p className="text-2xl font-bold text-gray-900">{totalMembres}</p>
-                    </div>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-green-50 text-green-600"><CheckCircle size={22} /></div>
-                    <div>
-                        <p className="text-sm text-gray-500 font-medium">Membres Actifs</p>
-                        <p className="text-2xl font-bold text-gray-900">{membresActifs}</p>
-                    </div>
-                </div>
+            {/* Recherche */}
+            <div className="relative max-w-sm mb-6">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                    type="text"
+                    placeholder="Rechercher un membre, un rôle..."
+                    value={recherche}
+                    onChange={(e) => setRecherche(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#3e52b7] transition-colors shadow-sm"
+                />
             </div>
 
-            {/* Filtres & Switcher de Vue */}
-            <div className="flex justify-between items-center gap-4 mb-6">
-                <div className="relative flex-1 max-w-sm">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Rechercher un membre, un rôle..."
-                        value={recherche}
-                        onChange={(e) => setRecherche(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
-                    />
-                </div>
-                
-                <div className="bg-gray-100 p-1 rounded-xl flex gap-1 shadow-inner">
-                    <button 
-                        onClick={() => setViewMode('grid')}
-                        className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                        title="Vue en Grille"
-                    >
-                        <Grid size={18} />
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('table')}
-                        className={`p-1.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                        title="Vue en Tableau"
-                    >
-                        <List size={18} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Contenu principal */}
-            {membresFiltrés.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-500 font-medium shadow-sm">
+            {/* Tableau */}
+            {membresFiltres.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 font-medium shadow-sm">
                     Aucun membre ne correspond à votre recherche.
                 </div>
-            ) : viewMode === 'grid' ? (
-                /* --- VUE EN GRILLE --- */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {membresFiltrés.map((m) => (
-                        <div 
-                            key={m._id}
-                            onClick={() => handleOpenEditModal(m)}
-                            className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-all relative cursor-pointer flex flex-col justify-between group"
-                        >
-                            <span className={`absolute top-4 right-4 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${m.actif ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500'}`}>
-                                {m.actif ? 'Actif' : 'Inactif'}
-                            </span>
-
-                            <div className="flex flex-col items-center text-center mt-2">
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-blue-100 mb-3 group-hover:scale-105 transition-transform">
-                                    {m.prenom?.charAt(0).toUpperCase()}{m.nom?.charAt(0).toUpperCase()}
-                                </div>
-                                <h3 className="font-bold text-gray-900 text-base line-clamp-1">{m.prenom} {m.nom}</h3>
-                                <p className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg mt-2 inline-block">
-                                    {m.role || 'Non défini'}
-                                </p>
-                            </div>
-
-                            <div className="border-t border-gray-100 pt-4 mt-5 space-y-2.5 text-xs text-gray-600">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">École :</span>
-                                    <span className="font-medium text-gray-800">{m.marque?.nom || 'Aucune'}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-400">Téléphone :</span>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="font-medium text-gray-800">{m.telephone || '-'}</span>
-                                        {m.telephone && (
-                                            <button 
-                                                onClick={(e) => copierTelephone(e, m.telephone)}
-                                                className="text-gray-400 hover:text-blue-600 p-0.5 rounded transition-colors"
-                                                title="Copier le numéro"
-                                            >
-                                                <Copy size={13} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Email :</span>
-                                    <span className="font-medium text-gray-800 truncate max-w-[150px]" title={m.email}>{m.email}</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
             ) : (
-                /* --- VUE EN TABLEAU CLASSIQUE --- */
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Nom</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Rôle</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Téléphone</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Marque</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Statut</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {membresFiltrés.map((m) => (
-                                <tr
-                                    key={m._id}
-                                    onClick={() => handleOpenEditModal(m)}
-                                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                                >
-                                    <td className="px-6 py-3.5 whitespace-nowrap">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-                                                {m.prenom?.charAt(0).toUpperCase()}{m.nom?.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className="font-semibold text-gray-900 text-sm">{m.prenom} {m.nom}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-3.5">
-                                        <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-50 text-blue-700">
-                                            {m.role || 'Non défini'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-3.5 text-sm text-gray-600">{m.telephone || '-'}</td>
-                                    <td className="px-6 py-3.5 text-sm text-gray-600">{m.marque?.nom || 'Aucune'}</td>
-                                    <td className="px-6 py-3.5">
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${m.actif ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                            {m.actif ? 'Actif' : 'Inactif'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-3.5 text-right">
-                                        <button 
-                                            onClick={(e) => copierTelephone(e, m.telephone)}
-                                            className="text-gray-400 hover:text-blue-600 transition-colors p-1"
-                                            title="Copier le numéro"
-                                        >
-                                            <Copy size={16} />
-                                        </button>
-                                    </td>
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <th className="px-6 py-4">Nom</th>
+                                    <th className="px-6 py-4">Rôle</th>
+                                    <th className="px-6 py-4">Marque</th>
+                                    <th className="px-6 py-4">Statut</th>
+                                    <th className="px-6 py-4 text-right">Contact</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+                                {membresFiltres.map((m) => (
+                                    <tr
+                                        key={m._id}
+                                        onClick={() => handleOpenEditModal(m)}
+                                        className="hover:bg-slate-50/80 cursor-pointer transition-colors"
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-50 text-[#3e52b7] font-semibold text-xs flex items-center justify-center shrink-0">
+                                                    {m.prenom?.charAt(0).toUpperCase()}{m.nom?.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className="font-semibold text-slate-900">{m.prenom} {m.nom}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-50 text-[#3e52b7]">
+                                                {m.role || 'Non défini'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                                            {m.marque?.nom || '—'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${m.actif ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {m.actif ? 'Actif' : 'Inactif'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                                {m.telephone && (
+                                                    <button
+                                                        onClick={(e) => handleCopy(m.telephone, m._id, 'telephone', e)}
+                                                        className="text-slate-400 hover:text-[#3e52b7] p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                                                        title="Copier le téléphone"
+                                                    >
+                                                        {copieId.id === m._id && copieId.type === 'telephone' ? <Check size={14} className="text-emerald-600" /> : <Phone size={14} />}
+                                                    </button>
+                                                )}
+                                                {m.email && (
+                                                    <button
+                                                        onClick={(e) => handleCopy(m.email, m._id, 'email', e)}
+                                                        className="text-slate-400 hover:text-[#3e52b7] p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                                                        title="Copier l'email"
+                                                    >
+                                                        {copieId.id === m._id && copieId.type === 'email' ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
             {/* Modale d'ajout/modification */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-lg font-bold text-gray-900">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl border border-slate-100 overflow-hidden">
+                        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 className="text-lg font-bold text-slate-900">
                                 {isEditing ? "Modifier le membre" : "Ajouter un membre"}
                             </h2>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
                                 <X size={18} />
                             </button>
                         </div>
@@ -308,45 +233,49 @@ const Equipes = () => {
                         <form onSubmit={handleSubmit} className="p-5 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Nom</label>
-                                    <input type="text" required value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500" />
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Prénom</label>
+                                    <input type="text" required value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Prénom</label>
-                                    <input type="text" required value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Email</label>
-                                    <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Téléphone</label>
-                                    <input type="text" placeholder="Ex: 06 12 34 56 78" value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500" />
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nom</label>
+                                    <input type="text" required value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Rôle</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Ex: Photographe, Monteur..." 
-                                        value={formData.role} 
-                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })} 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500" 
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                        <Mail size={11} className="inline mr-1 -mt-0.5" />Email
+                                    </label>
+                                    <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                        <Phone size={11} className="inline mr-1 -mt-0.5" />Téléphone
+                                    </label>
+                                    <input type="text" placeholder="Ex: 06 12 34 56 78" value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]" />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Rôle</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ex: Photographe, Monteur..."
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Marque (École)</label>
-                                    <select 
-                                        value={formData.marque} 
-                                        onChange={(e) => setFormData({ ...formData, marque: e.target.value })} 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-blue-500"
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Marque (École)</label>
+                                    <select
+                                        value={formData.marque}
+                                        onChange={(e) => setFormData({ ...formData, marque: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#3e52b7]"
                                     >
-                                        <option value="">-- Sélectionner une marque --</option>
+                                        <option value="">Aucune</option>
                                         {marques.map(m => (
                                             <option key={m._id} value={m._id}>{m.nom}</option>
                                         ))}
@@ -354,12 +283,12 @@ const Equipes = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 pt-2">
-                                <input type="checkbox" id="actif" checked={formData.actif} onChange={(e) => setFormData({ ...formData, actif: e.target.checked })} className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                                <label htmlFor="actif" className="text-sm font-semibold text-gray-700 selection:bg-transparent">Compte actif</label>
+                            <div className="flex items-center gap-2 pt-1">
+                                <input type="checkbox" id="actif" checked={formData.actif} onChange={(e) => setFormData({ ...formData, actif: e.target.checked })} className="w-4 h-4 text-[#3e52b7] border-slate-300 rounded focus:ring-[#3e52b7]" />
+                                <label htmlFor="actif" className="text-sm font-semibold text-slate-700">Compte actif</label>
                             </div>
 
-                            <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-6">
+                            <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-6">
                                 <div>
                                     {isEditing && (
                                         <button type="button" onClick={handleDelete} className="px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1.5 transition-colors">
@@ -368,10 +297,10 @@ const Equipes = () => {
                                     )}
                                 </div>
                                 <div className="flex gap-3">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
                                         Annuler
                                     </button>
-                                    <button type="submit" className="px-5 py-2 text-sm font-semibold text-white bg-[#3b82f6] hover:bg-blue-700 rounded-lg shadow-sm transition-colors">
+                                    <button type="submit" className="px-5 py-2 text-sm font-semibold text-white bg-[#3e52b7] hover:bg-[#34449a] rounded-lg shadow-sm transition-colors">
                                         {isEditing ? 'Mettre à jour' : 'Sauvegarder'}
                                     </button>
                                 </div>

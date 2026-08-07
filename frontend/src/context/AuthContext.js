@@ -22,6 +22,12 @@ export const AuthProvider = ({ children }) => {
         setToken(userToken);
         localStorage.setItem('token', userToken);
         localStorage.setItem('user', JSON.stringify(userData));
+        // Mémorisé séparément et volontairement conservé après déconnexion,
+        // pour personnaliser l'écran de connexion au retour ("Bon retour, {prénom}")
+        localStorage.setItem('dernierUtilisateur', JSON.stringify({
+            prenom: userData.prenom,
+            nom: userData.nom
+        }));
     };
 
     const logout = () => {
