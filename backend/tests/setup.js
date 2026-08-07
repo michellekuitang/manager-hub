@@ -16,6 +16,13 @@
 
 const mongoose = require('mongoose');
 
+// Variables d'environnement necessaires aux tests.
+// Le fichier .env n'est pas charge ici : on fournit des valeurs dediees,
+// distinctes de celles de production, pour que les tests soient reproductibles
+// sur n'importe quelle machine.
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'secret_de_test_managerhub';
+process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+
 // Les modeles doivent etre enregistres aupres de Mongoose avant que les
 // controleurs n'utilisent .populate(), sinon Mongoose leve une MissingSchemaError.
 require('../models/Utilisateur');
