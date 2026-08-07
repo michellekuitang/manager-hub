@@ -1,5 +1,7 @@
 # Manager Hub
 
+![Tests](https://github.com/michellekuitang/manager-hub/actions/workflows/tests.yml/badge.svg)
+
 Application web de suivi des tournages et du planning marketing — ESIIA
 
 ## Stack technique
