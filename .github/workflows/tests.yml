@@ -1,0 +1,78 @@
+# Ce fichier decrit un workflow d'integration continue.
+# A chaque envoi de code sur GitHub, la plateforme demarre une machine Linux
+# neuve, installe les dependances, lance un serveur MongoDB et execute les
+# tests. Le resultat s'affiche sous forme de pastille verte ou rouge sur le
+# depot et sur chaque pull request.
+
+name: Tests backend
+
+# Quand declencher le workflow.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    name: Tests unitaires
+    runs-on: ubuntu-latest
+
+    # Services annexes demarres a cote du job.
+    # Sur GitHub il n'y a pas le conteneur Docker de la machine de
+    # developpement : on declare donc un MongoDB dedie, accessible sur
+    # localhost:27017 comme en local.
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Le projet backend se trouve dans un sous-dossier : toutes les commandes
+    # s'executent depuis celui-ci.
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # npm ci installe exactement les versions du package-lock.json.
+      # Plus rapide et plus reproductible que npm install en integration continue.
+      - name: Installer les dependances
+        run: npm ci
+
+      - name: Executer les tests
+        run: npm test
+        env:
+          JWT_SECRET: secret_de_test_integration_continue
+          JWT_EXPIRES_IN: 8h
+
+      - name: Mesurer la couverture
+        run: npm run test:coverage
+        env:
+          JWT_SECRET: secret_de_test_integration_continue
+          JWT_EXPIRES_IN: 8h
+
+      # Le rapport HTML est conserve 30 jours et telechargeable depuis
+      # l'interface GitHub, onglet Actions.
+      - name: Conserver le rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-couverture
+          path: backend/coverage/
+          retention-days: 30
