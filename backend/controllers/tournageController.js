@@ -6,6 +6,31 @@ try {
   // Au cas où le modèle Creneau n'est pas utilisé directement
 }
 
+// Normalise les statuts reçus du front-end vers la forme canonique accentuée.
+// Le formulaire React envoie des valeurs sans accents ("A valider"), tandis que
+// la synchronisation depuis les contenus envoie des valeurs accentuées
+// ("À valider"). Sans cette normalisation, la base contiendrait deux
+// orthographes pour un même statut, et les filtres par statut seraient faux.
+const NORMALISER_STATUT = (statut) => {
+    if (!statut) return 'À faire';
+
+    const sansAccent = String(statut)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+
+    if (sansAccent.includes('faire')) return 'À faire';
+    if (sansAccent.includes('cours')) return 'En cours';
+    if (sansAccent.includes('valider')) return 'À valider';
+    if (sansAccent.includes('valide')) return 'Validé';
+    if (sansAccent.includes('publi')) return 'Publié';
+
+    // Valeur inconnue : on la laisse passer telle quelle pour que l'enum du
+    // schéma la rejette avec un message explicite.
+    return statut;
+};
+
 // Si aucune date de tournage n'est fournie mais qu'un créneau est associé,
 // la date du créneau réservé fait foi.
 const resoudreDateTournage = async (dateTournage, creneauId) => {
@@ -22,7 +47,7 @@ exports.getTournages = async (req, res) => {
             .populate('marque_id')
             .populate('intervenant_id')
             .populate('creneau_id');
-            
+
         res.status(200).json(tournages);
     } catch (error) {
         console.error('Erreur getTournages:', error);
@@ -77,7 +102,7 @@ exports.createTournage = async (req, res) => {
             marque_id: marque_id || null,
             intervenant_id: intervenant_id || null,
             creneau_id: creneau_id || null,
-            statut: statut || 'À faire',
+            statut: NORMALISER_STATUT(statut),
             date_tournage: dateTournageResolue,
             lieu: lieu || '',
             type_contenu: type_contenu || 'presentation',
@@ -115,6 +140,11 @@ exports.updateTournage = async (req, res) => {
 
         // Mise à jour des champs transmis
         Object.assign(tournage, req.body);
+
+        // Normalisation du statut : le formulaire l'envoie sans accents.
+        if (req.body.statut !== undefined) {
+            tournage.statut = NORMALISER_STATUT(req.body.statut);
+        }
 
         // Nettoyage des chaînes vides pour la base de données
         if (req.body.intervenant_id === '') tournage.intervenant_id = null;

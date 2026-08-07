@@ -102,6 +102,46 @@ describe('createTournage', () => {
         expect(creneauRelu.tournage_id).not.toBeNull();
     });
 
+    it('normalise un statut saisi sans accent par le formulaire', async () => {
+        const req = creerReq({ body: { titre: 'Tournage', statut: 'A valider' } });
+        const res = creerRes();
+
+        await tournageController.createTournage(req, res);
+
+        expect(statutRenvoye(res)).toBe(201);
+        expect(corpsRenvoye(res).statut).toBe('À valider');
+    });
+
+    it('accepte les cinq statuts du referentiel, avec ou sans accent', async () => {
+        const correspondances = [
+            ['A faire', 'À faire'],
+            ['En cours', 'En cours'],
+            ['A valider', 'À valider'],
+            ['Valide', 'Validé'],
+            ['Publie', 'Publié']
+        ];
+
+        for (const [saisi, attendu] of correspondances) {
+            const req = creerReq({ body: { titre: `Tournage ${saisi}`, statut: saisi } });
+            const res = creerRes();
+
+            await tournageController.createTournage(req, res);
+
+            expect(statutRenvoye(res)).toBe(201);
+            expect(corpsRenvoye(res).statut).toBe(attendu);
+        }
+    });
+
+    it('refuse un statut absent du referentiel', async () => {
+        const req = creerReq({ body: { titre: 'Tournage', statut: 'Archive' } });
+        const res = creerRes();
+
+        await tournageController.createTournage(req, res);
+
+        expect(statutRenvoye(res)).toBe(400);
+        expect(await Tournage.countDocuments()).toBe(0);
+    });
+
     it('ignore les champs inconnus envoyes par le client', async () => {
         const idInjecte = new mongoose.Types.ObjectId().toString();
         const req = creerReq({
@@ -198,6 +238,33 @@ describe('updateTournage', () => {
         expect(tournage.marque_id).toBeNull();
         expect(tournage.intervenant_id).toBeNull();
         expect(tournage.date_tournage).toBeNull();
+    });
+
+    it('normalise le statut lors d une mise a jour', async () => {
+        const cree = await Tournage.create({ titre: 'Tournage' });
+        const req = creerReq({
+            params: { id: cree._id.toString() },
+            body: { statut: 'Publie' }
+        });
+        const res = creerRes();
+
+        await tournageController.updateTournage(req, res);
+
+        expect(statutRenvoye(res)).toBe(200);
+        expect(corpsRenvoye(res).statut).toBe('Publié');
+    });
+
+    it('refuse une mise a jour vers un statut invalide', async () => {
+        const cree = await Tournage.create({ titre: 'Tournage' });
+        const req = creerReq({
+            params: { id: cree._id.toString() },
+            body: { statut: 'Archive' }
+        });
+        const res = creerRes();
+
+        await tournageController.updateTournage(req, res);
+
+        expect(statutRenvoye(res)).toBe(400);
     });
 
     it('renvoie une erreur 404 si le tournage n existe pas', async () => {

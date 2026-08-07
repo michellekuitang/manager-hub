@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 
+// Referentiel unique des statuts, partage avec le workflow des contenus.
+// Les valeurs sont accentuees : c'est la forme canonique enregistree en base.
+// Les controleurs normalisent toute variante recue avant enregistrement.
+const STATUTS = ['À faire', 'En cours', 'À valider', 'Validé', 'Publié'];
+
 const tournageSchema = new mongoose.Schema(
   {
     titre: {
@@ -23,6 +28,10 @@ const tournageSchema = new mongoose.Schema(
     },
     statut: {
       type: String,
+      enum: {
+        values: STATUTS,
+        message: 'Statut invalide : {VALUE}.'
+      },
       default: 'À faire'
     },
     date_tournage: {
@@ -64,3 +73,4 @@ const tournageSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Tournage', tournageSchema);
+module.exports.STATUTS = STATUTS;
