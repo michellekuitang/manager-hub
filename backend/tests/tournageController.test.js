@@ -87,11 +87,14 @@ describe('createTournage', () => {
             .toBe(dateCreneau.toISOString());
     });
 
-    it('rattache le tournage au creneau reserve', async () => {
+    it('rattache le tournage au creneau et le passe en "Reserve"', async () => {
         const creneau = await Creneau.create({
             date_debut: new Date('2026-10-03T09:00:00.000Z'),
             date_fin: new Date('2026-10-03T11:00:00.000Z')
         });
+
+        // Un creneau nouvellement cree est libre.
+        expect(creneau.statut).toBe('Disponible');
 
         const req = creerReq({
             body: { titre: 'Tournage lie', creneau_id: creneau._id.toString() }
@@ -100,6 +103,7 @@ describe('createTournage', () => {
 
         const creneauRelu = await Creneau.findById(creneau._id);
         expect(creneauRelu.tournage_id).not.toBeNull();
+        expect(creneauRelu.statut).toBe('Reserve');
     });
 
     it('normalise un statut saisi sans accent par le formulaire', async () => {
@@ -267,6 +271,67 @@ describe('updateTournage', () => {
         expect(statutRenvoye(res)).toBe(400);
     });
 
+    it('libere l ancien creneau et reserve le nouveau', async () => {
+        const ancien = await Creneau.create({
+            date_debut: new Date('2026-11-01T09:00:00.000Z'),
+            date_fin: new Date('2026-11-01T11:00:00.000Z')
+        });
+        const nouveau = await Creneau.create({
+            date_debut: new Date('2026-11-08T09:00:00.000Z'),
+            date_fin: new Date('2026-11-08T11:00:00.000Z')
+        });
+
+        // Creation du tournage sur le premier creneau.
+        const resCreation = creerRes();
+        await tournageController.createTournage(
+            creerReq({ body: { titre: 'Tournage deplace', creneau_id: ancien._id.toString() } }),
+            resCreation
+        );
+        const tournageId = corpsRenvoye(resCreation)._id.toString();
+
+        expect((await Creneau.findById(ancien._id)).statut).toBe('Reserve');
+
+        // Deplacement vers le second creneau.
+        await tournageController.updateTournage(
+            creerReq({
+                params: { id: tournageId },
+                body: { creneau_id: nouveau._id.toString() }
+            }),
+            creerRes()
+        );
+
+        const ancienRelu = await Creneau.findById(ancien._id);
+        const nouveauRelu = await Creneau.findById(nouveau._id);
+
+        expect(ancienRelu.tournage_id).toBeNull();
+        expect(ancienRelu.statut).toBe('Disponible');
+        expect(nouveauRelu.tournage_id.toString()).toBe(tournageId);
+        expect(nouveauRelu.statut).toBe('Reserve');
+    });
+
+    it('libere le creneau quand on le retire du tournage', async () => {
+        const creneau = await Creneau.create({
+            date_debut: new Date('2026-11-15T09:00:00.000Z'),
+            date_fin: new Date('2026-11-15T11:00:00.000Z')
+        });
+
+        const resCreation = creerRes();
+        await tournageController.createTournage(
+            creerReq({ body: { titre: 'Tournage annule', creneau_id: creneau._id.toString() } }),
+            resCreation
+        );
+        const tournageId = corpsRenvoye(resCreation)._id.toString();
+
+        await tournageController.updateTournage(
+            creerReq({ params: { id: tournageId }, body: { creneau_id: '' } }),
+            creerRes()
+        );
+
+        const creneauRelu = await Creneau.findById(creneau._id);
+        expect(creneauRelu.tournage_id).toBeNull();
+        expect(creneauRelu.statut).toBe('Disponible');
+    });
+
     it('renvoie une erreur 404 si le tournage n existe pas', async () => {
         const req = creerReq({
             params: { id: new mongoose.Types.ObjectId().toString() },
@@ -293,19 +358,23 @@ describe('deleteTournage', () => {
         expect(await Tournage.countDocuments()).toBe(0);
     });
 
-    it('delie le creneau associe lors de la suppression', async () => {
+    it('libere le creneau associe lors de la suppression', async () => {
         const creneau = await Creneau.create({
             date_debut: new Date('2026-10-04T09:00:00.000Z'),
             date_fin: new Date('2026-10-04T11:00:00.000Z')
         });
         const tournage = await Tournage.create({ titre: 'Avec creneau', creneau_id: creneau._id });
-        await Creneau.findByIdAndUpdate(creneau._id, { tournage_id: tournage._id });
+        await Creneau.findByIdAndUpdate(creneau._id, {
+            tournage_id: tournage._id,
+            statut: 'Reserve'
+        });
 
         const req = creerReq({ params: { id: tournage._id.toString() } });
         await tournageController.deleteTournage(req, creerRes());
 
         const creneauRelu = await Creneau.findById(creneau._id);
         expect(creneauRelu.tournage_id).toBeNull();
+        expect(creneauRelu.statut).toBe('Disponible');
     });
 
     it('renvoie une erreur 404 si le tournage n existe pas', async () => {

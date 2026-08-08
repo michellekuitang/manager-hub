@@ -284,7 +284,7 @@ const CalendrierCreneaux = () => {
                                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-[#3e52b7]/10 focus:border-[#3e52b7]"
                                 >
                                     <option value="Disponible">Disponible</option>
-                                    <option value="Réservé">Réservé</option>
+                                    <option value="Reserve">Réservé</option>
                                 </select>
                             </div>
 

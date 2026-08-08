@@ -31,6 +31,8 @@ require('../models/Intervenant');
 require('../models/Creneau');
 require('../models/Tournage');
 require('../models/Contenu');
+require('../models/Campagne');
+require('../models/Equipe');
 
 // Jest execute les fichiers de test en parallele, dans plusieurs processus.
 // Si tous partagent la meme base, le nettoyage effectue par l'un efface les
@@ -51,7 +53,13 @@ if (!/test/i.test(URI_TEST)) {
 
 beforeAll(async () => {
     try {
-        await mongoose.connect(URI_TEST, { serverSelectionTimeoutMS: 5000 });
+        await mongoose.connect(URI_TEST, {
+            serverSelectionTimeoutMS: 5000,
+            // Les tests s'executent sequentiellement : une poignee de
+            // connexions suffit. Un pool trop large ralentit l'acces au
+            // conteneur Docker sans rien apporter.
+            maxPoolSize: 5
+        });
     } catch (erreur) {
         throw new Error(
             `Impossible de se connecter a ${URI_TEST}.\n` +
