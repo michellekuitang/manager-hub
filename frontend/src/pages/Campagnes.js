@@ -16,6 +16,7 @@ const Campagnes = () => {
         marque_id: '',
         type: 'Google Ads',
         statut: 'Brouillon',
+        campus: 'Tous',
         budget: '',
         depense: '',
         leads: '',
@@ -63,6 +64,7 @@ const Campagnes = () => {
             marque_id: campagne.marque_id?._id || campagne.marque_id || '',
             type: campagne.type || 'Google Ads',
             statut: campagne.statut || 'Brouillon',
+            campus: campagne.campus || 'Tous',
             budget: campagne.budget !== undefined ? campagne.budget : '',
             depense: campagne.depense !== undefined ? campagne.depense : '',
             leads: campagne.leads !== undefined ? campagne.leads : '',
@@ -83,6 +85,7 @@ const Campagnes = () => {
             marque_id: '',
             type: 'Google Ads',
             statut: 'Brouillon',
+            campus: 'Tous',
             budget: '',
             depense: '',
             leads: '',
@@ -379,6 +382,24 @@ const Campagnes = () => {
                                 </div>
                             </div>
 
+                            {/* Campus */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Campus</label>
+                                <select
+                                    name="campus"
+                                    value={formData.campus}
+                                    onChange={handleChange}
+                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none transition"
+                                >
+                                    <option value="Tous">Tous</option>
+                                    <option value="Torcy">Torcy</option>
+                                    <option value="Noisiel">Noisiel</option>
+                                    <option value="Lyon">Lyon</option>
+                                    <option value="Évry">Évry</option>
+                                    <option value="International">International</option>
+                                </select>
+                            </div>
+
                             {/* Statut & Budget */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -392,7 +413,7 @@ const Campagnes = () => {
                                         <option value="Brouillon">Brouillon</option>
                                         <option value="Active">Active</option>
                                         <option value="Terminée">Terminée</option>
-                                        <option value="A venir">A venir</option>
+                                        <option value="À venir">À venir</option>
                                     </select>
                                 </div>
                                 <div>

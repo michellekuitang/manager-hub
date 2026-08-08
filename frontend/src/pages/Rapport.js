@@ -93,6 +93,20 @@ const genererSynthese = (reportData) => {
         phrases.push(`${totalContenusPublies} ${accorder(totalContenusPublies, 'contenu a été publié', 'contenus ont été publiés')} sur les réseaux.`);
     }
 
+    // Campagnes
+    const totalCampagnesActives = kpis.totalCampagnesActives || 0;
+    const budgetTotalEngage = kpis.budgetTotalEngage || 0;
+    const budgetDepense = kpis.budgetDepense || 0;
+
+    if (totalCampagnesActives === 0) {
+        phrases.push("Aucune campagne n'est active sur cette période.");
+    } else {
+        const pourcentageBudget = budgetTotalEngage > 0 ? Math.round((budgetDepense / budgetTotalEngage) * 100) : 0;
+        phrases.push(
+            `${totalCampagnesActives} ${accorder(totalCampagnesActives, 'campagne est active', 'campagnes sont actives')} cette semaine, avec ${budgetDepense.toLocaleString('fr-FR')}€ dépensés sur ${budgetTotalEngage.toLocaleString('fr-FR')}€ de budget engagé (${pourcentageBudget}%).`
+        );
+    }
+
     return phrases.join(' ');
 };
 
@@ -194,6 +208,7 @@ const Rapport = () => {
 
     const tournages = reportData?.tournages || [];
     const creneaux = reportData?.creneaux || [];
+    const campagnes = reportData?.campagnes || [];
     const synthese = reportData ? genererSynthese(reportData) : '';
 
     return (
@@ -357,6 +372,56 @@ const Rapport = () => {
                                             </td>
                                         </tr>
                                     ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* IV. Tableau des campagnes */}
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 border-b-2 border-[#3e52b7]/20 pb-1">
+                            <span className="text-[#3e52b7]">IV.</span> Campagnes en cours
+                        </h3>
+
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr className="text-[#3e52b7] text-xs uppercase tracking-wider border-b-2 border-[#3e52b7]/30">
+                                    <th className="py-2 pr-3 font-semibold">Campagne</th>
+                                    <th className="py-2 pr-3 font-semibold">Marque</th>
+                                    <th className="py-2 pr-3 font-semibold text-right">Budget</th>
+                                    <th className="py-2 pr-3 font-semibold text-right">Dépensé</th>
+                                    <th className="py-2 pr-3 font-semibold text-right">Progression</th>
+                                    <th className="py-2 pl-3 font-semibold text-right">Leads</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {campagnes.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="py-5 text-center text-slate-400 italic">
+                                            Aucune campagne active sur cette période.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    campagnes.map((c) => {
+                                        const pourcentage = c.budget > 0 ? Math.min(100, Math.round((c.depense / c.budget) * 100)) : 0;
+                                        return (
+                                            <tr key={c._id}>
+                                                <td className="py-2.5 pr-3 font-semibold text-slate-900">{c.nom}</td>
+                                                <td className="py-2.5 pr-3 text-slate-600">{c.marque_id?.nom || 'N/C'}</td>
+                                                <td className="py-2.5 pr-3 text-right text-slate-600">{(c.budget || 0).toLocaleString('fr-FR')}€</td>
+                                                <td className="py-2.5 pr-3 text-right text-slate-600">{(c.depense || 0).toLocaleString('fr-FR')}€</td>
+                                                <td className="py-2.5 pr-3 text-right">
+                                                    <div className="flex items-center gap-2 justify-end">
+                                                        <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-[#3e52b7]" style={{ width: `${pourcentage}%` }} />
+                                                        </div>
+                                                        <span className="text-slate-500 w-9 text-right">{pourcentage}%</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2.5 pl-3 text-right text-slate-500">{c.leads || 0}</td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>

@@ -1,5 +1,9 @@
 const Equipe = require('../models/Equipe');
 
+// Une erreur de validation Mongoose (champ manquant, id malforme, etc.) vient
+// de la requete du client, pas d'une panne serveur : elle doit renvoyer 400, pas 500.
+const estErreurDeRequete = (error) => error.name === 'ValidationError' || error.name === 'CastError';
+
 // 1. Récupérer tous les membres de l'équipe
 exports.getMembres = async (req, res) => {
     try {
@@ -24,10 +28,11 @@ exports.createMembre = async (req, res) => {
 
         const nouveauMembre = new Equipe({ nom, prenom, email, telephone, role, marque, actif });
         await nouveauMembre.save();
-        
+
         res.status(201).json(nouveauMembre);
     } catch (err) {
-        res.status(500).json({ message: "Erreur lors de la création du membre", error: err.message });
+        const statutCode = estErreurDeRequete(err) ? 400 : 500;
+        res.status(statutCode).json({ message: "Erreur lors de la création du membre", error: err.message });
     }
 };
 
@@ -50,7 +55,8 @@ exports.updateMembre = async (req, res) => {
 
         res.status(200).json(membreModifie);
     } catch (err) {
-        res.status(500).json({ message: "Erreur lors de la modification du membre", error: err.message });
+        const statutCode = estErreurDeRequete(err) ? 400 : 500;
+        res.status(statutCode).json({ message: "Erreur lors de la modification du membre", error: err.message });
     }
 };
 
@@ -66,6 +72,7 @@ exports.deleteMembre = async (req, res) => {
 
         res.status(200).json({ message: "Membre supprimé avec succès." });
     } catch (err) {
-        res.status(500).json({ message: "Erreur lors de la suppression du membre", error: err.message });
+        const statutCode = estErreurDeRequete(err) ? 400 : 500;
+        res.status(statutCode).json({ message: "Erreur lors de la suppression du membre", error: err.message });
     }
 };

@@ -4,7 +4,7 @@ const creneauSchema = new mongoose.Schema({
     date_debut: { type: Date, required: true },
     date_fin: { type: Date, required: true },
     objet: { type: String },
-    statut: { type: String, enum: ['Disponible', 'Reserve'], default: 'Reserve' },
+    statut: { type: String, enum: ['Disponible', 'Reserve'], default: 'Disponible' },
     intervenant_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Intervenant' },
     // 🔗 Ajout de la liaison inverse vers le projet de tournage
     tournage_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tournage' }

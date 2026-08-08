@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node seed.js",
+    "migrer:statut-creneaux": "node scripts/migrer-statut-creneaux.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

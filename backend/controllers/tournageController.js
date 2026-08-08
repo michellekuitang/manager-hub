@@ -117,7 +117,7 @@ exports.createTournage = async (req, res) => {
 
         // Associer le créneau si un creneau_id a été transmis
         if (creneau_id && Creneau) {
-            await Creneau.findByIdAndUpdate(creneau_id, { tournage_id: savedTournage._id });
+            await Creneau.findByIdAndUpdate(creneau_id, { tournage_id: savedTournage._id, statut: 'Reserve' });
         }
 
         res.status(201).json(savedTournage);
@@ -163,10 +163,10 @@ exports.updateTournage = async (req, res) => {
         // Mettre à jour la liaison avec le créneau si nécessaire
         if (Creneau && String(oldCreneauId) !== String(updatedTournage.creneau_id)) {
             if (oldCreneauId) {
-                await Creneau.findByIdAndUpdate(oldCreneauId, { tournage_id: null });
+                await Creneau.findByIdAndUpdate(oldCreneauId, { tournage_id: null, statut: 'Disponible' });
             }
             if (updatedTournage.creneau_id) {
-                await Creneau.findByIdAndUpdate(updatedTournage.creneau_id, { tournage_id: updatedTournage._id });
+                await Creneau.findByIdAndUpdate(updatedTournage.creneau_id, { tournage_id: updatedTournage._id, statut: 'Reserve' });
             }
         }
 
@@ -188,7 +188,7 @@ exports.deleteTournage = async (req, res) => {
 
         // Délier le créneau si nécessaire
         if (tournage.creneau_id && Creneau) {
-            await Creneau.findByIdAndUpdate(tournage.creneau_id, { tournage_id: null });
+            await Creneau.findByIdAndUpdate(tournage.creneau_id, { tournage_id: null, statut: 'Disponible' });
         }
 
         await Tournage.findByIdAndDelete(req.params.id);

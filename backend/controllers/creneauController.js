@@ -1,10 +1,15 @@
 const Creneau = require('../models/Creneau');
 
+// Une erreur de validation Mongoose (champ manquant, statut hors enum, etc.) vient
+// de la requete du client, pas d'une panne serveur : elle doit renvoyer 400, pas 500.
+const estErreurDeRequete = (error) => error.name === 'ValidationError' || error.name === 'CastError';
+
 const getCreneaux = async (req, res) => {
     try {
         const creneaux = await Creneau.find()
             .populate('intervenant_id', 'nom prenom')
-            .populate('tournage_id', 'titre');
+            .populate('tournage_id', 'titre')
+            .sort({ date_debut: 1 });
         res.status(200).json(creneaux);
     } catch (error) {
         res.status(500).json({ message: 'Erreur lors de la recuperation des creneaux.', error: error.message });
@@ -20,13 +25,14 @@ const createCreneau = async (req, res) => {
             .populate('tournage_id', 'titre');
         res.status(201).json(creneauPeuple);
     } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la reservation du creneau.', error: error.message });
+        const statutCode = estErreurDeRequete(error) ? 400 : 500;
+        res.status(statutCode).json({ message: 'Erreur lors de la reservation du creneau.', error: error.message });
     }
 };
 
 const updateCreneau = async (req, res) => {
     try {
-        const creneau = await Creneau.findByIdAndUpdate(req.params.id, req.body, { new: true })
+        const creneau = await Creneau.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
             .populate('intervenant_id', 'nom prenom')
             .populate('tournage_id', 'titre');
         if (!creneau) {
@@ -34,7 +40,8 @@ const updateCreneau = async (req, res) => {
         }
         res.status(200).json(creneau);
     } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la modification du creneau.', error: error.message });
+        const statutCode = estErreurDeRequete(error) ? 400 : 500;
+        res.status(statutCode).json({ message: 'Erreur lors de la modification du creneau.', error: error.message });
     }
 };
 
@@ -46,7 +53,8 @@ const deleteCreneau = async (req, res) => {
         }
         res.status(200).json({ message: 'Creneau supprime.' });
     } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la suppression du creneau.', error: error.message });
+        const statutCode = estErreurDeRequete(error) ? 400 : 500;
+        res.status(statutCode).json({ message: 'Erreur lors de la suppression du creneau.', error: error.message });
     }
 };
 

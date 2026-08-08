@@ -1,6 +1,7 @@
 const Tournage = require('../models/Tournage');
 const Creneau = require('../models/Creneau');
 const Contenu = require('../models/Contenu');
+const Campagne = require('../models/Campagne');
 
 // Normalisation universelle du statut (insensible aux accents et à la casse)
 // Alignée sur le référentiel partagé par les pages Tournages et Workflow.
@@ -33,7 +34,7 @@ const getWeeklyReport = async (req, res) => {
         // sinon la date du creneau reserve, sinon sa date de creation (fallback).
         const getDateEffective = (t) => t.date_tournage || t.creneau_id?.date_debut || t.createdAt;
 
-        const [tousLesTournages, creneaux, contenusPublies] = await Promise.all([
+        const [tousLesTournages, creneaux, contenusPublies, toutesLesCampagnes] = await Promise.all([
             Tournage.find()
                 .populate('marque_id', 'nom')
                 .populate('intervenant_id', 'nom prenom')
@@ -45,7 +46,8 @@ const getWeeklyReport = async (req, res) => {
             Contenu.find({
                 statut_workflow: 'Publié',
                 date_publication: { $gte: start, $lte: end }
-            })
+            }),
+            Campagne.find().populate('marque_id', 'nom')
         ]);
 
         const tournages = tousLesTournages
@@ -60,9 +62,27 @@ const getWeeklyReport = async (req, res) => {
             })
             .sort((a, b) => new Date(a.date_effective) - new Date(b.date_effective));
 
+        // Une campagne est "en cours" cette semaine si elle est Active et que sa periode
+        // (quand elle est definie) recouvre la semaine du rapport.
+        const estEnCoursCetteSemaine = (c) => {
+            if (c.statut !== 'Active') return false;
+            const debut = c.date_debut ? new Date(c.date_debut) : null;
+            const fin = c.date_fin ? new Date(c.date_fin) : null;
+            if (!debut && !fin) return true;
+            if (debut && debut > end) return false;
+            if (fin && fin < start) return false;
+            return true;
+        };
+
+        const campagnes = toutesLesCampagnes.filter(estEnCoursCetteSemaine);
+
         const totalTournages = tournages.length;
         const totalCreneaux = creneaux.length;
         const totalContenusPublies = contenusPublies.length;
+        const totalCampagnesActives = campagnes.length;
+        const budgetTotalEngage = campagnes.reduce((sum, c) => sum + (c.budget || 0), 0);
+        const budgetDepense = campagnes.reduce((sum, c) => sum + (c.depense || 0), 0);
+        const totalLeadsCampagnes = campagnes.reduce((sum, c) => sum + (c.leads || 0), 0);
 
         const parStatut = tournages.reduce((acc, t) => {
             const statut = normalizeStatut(t.statut);
@@ -81,14 +101,19 @@ const getWeeklyReport = async (req, res) => {
             kpis: {
                 totalTournages,
                 totalCreneaux,
-                totalContenusPublies
+                totalContenusPublies,
+                totalCampagnesActives,
+                budgetTotalEngage,
+                budgetDepense,
+                totalLeadsCampagnes
             },
             repartition: {
                 parStatut,
                 parMarque
             },
             tournages,
-            creneaux
+            creneaux,
+            campagnes
         });
 
     } catch (error) {
