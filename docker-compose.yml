@@ -1,4 +1,7 @@
-version: '3.8'
+# Environnement de developpement local.
+# Les valeurs sensibles ne sont pas ecrites ici : elles sont lues depuis
+# backend/.env, qui n'est pas versionne. Voir backend/.env.example pour la
+# liste des variables attendues.
 
 services:
   frontend:
@@ -18,10 +21,15 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    env_file:
+      - ./backend/.env
     environment:
+      # L'hote "mongo" est le nom du service ci-dessous : il n'est resolvable
+      # qu'a l'interieur du reseau Docker. Cette valeur ecrase donc celle du
+      # fichier .env, qui pointe sur localhost pour les scripts lances depuis
+      # la machine hote.
       - MONGO_URI=mongodb://mongo:27017/managerhub
-      - JWT_SECRET=changethissecret
-      - JWT_EXPIRES_IN=8h
+      - CORS_ORIGINS=http://localhost:3000
     depends_on:
       - mongo
 

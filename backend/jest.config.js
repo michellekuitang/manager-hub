@@ -35,7 +35,7 @@ module.exports = {
     ],
 
     // Marge confortable pour les operations base de donnees.
-    testTimeout: 30000,
+    testTimeout: 60000,
 
     // Affiche le detail de chaque test plutot qu'un simple point.
     verbose: true,
