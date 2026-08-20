@@ -28,7 +28,7 @@ services:
       # qu'a l'interieur du reseau Docker. Cette valeur ecrase donc celle du
       # fichier .env, qui pointe sur localhost pour les scripts lances depuis
       # la machine hote.
-      - MONGO_URI=mongodb://mongo:27017/managerhub
+      # - MONGO_URI=mongodb://mongo:27017/managerhub
       - CORS_ORIGINS=http://localhost:3000
     depends_on:
       - mongo
