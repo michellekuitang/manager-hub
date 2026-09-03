@@ -48,7 +48,7 @@ Le champ "concept_production" est le plus important : il doit donner à une équ
         // Utilisation du mode json_object pour forcer Llama à structurer correctement
         const completion = await groq.chat.completions.create({
             messages: [{ role: 'user', content: prompt }],
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             temperature: 0.7,
             response_format: { type: "json_object" },
             max_tokens: 1800
